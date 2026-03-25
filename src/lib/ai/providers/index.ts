@@ -100,7 +100,9 @@ async function callOpenAICompatible(
       ],
       temperature: 0.7,
       max_tokens: 16000,
-      response_format: { type: 'json_object' },
+      // Only include response_format for models known to support it.
+      // Many OpenRouter models don't support it and will error or ignore it.
+      ...(supportsJsonMode(model) ? { response_format: { type: 'json_object' } } : {}),
     }),
   });
 
@@ -174,4 +176,15 @@ async function callAnthropic(
     tokensIn: data.usage?.input_tokens || 0,
     tokensOut: data.usage?.output_tokens || 0,
   };
+}
+
+/** Models known to support response_format: json_object */
+function supportsJsonMode(model: string): boolean {
+  const supported = [
+    'gpt-4o', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4-turbo', 'gpt-3.5-turbo',
+    'o3', 'o3-mini',
+    'openai/gpt-4o', 'openai/gpt-4.1', 'openai/gpt-4.1-mini',
+    'openai/o3', 'openai/o3-mini',
+  ];
+  return supported.some(s => model.includes(s));
 }
