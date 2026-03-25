@@ -1,4 +1,5 @@
 import { generateTheme } from '@/lib/ai/generate';
+import { enhanceTheme } from '@/lib/enhancer';
 import { assembleTheme } from '@/lib/assembler';
 import { packageThemeBuffer } from '@/lib/packager';
 import { ProviderConfig } from '@/lib/ai/providers';
@@ -55,15 +56,18 @@ export async function POST(request: Request) {
       );
     }
 
+    // Enhance: apply deterministic design best practices
+    const enhanced = enhanceTheme(result.validation.data);
+
     // Generate theme slug from name
-    const slug = result.validation.data.themeName
+    const slug = enhanced.themeName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
       .slice(0, 50) || 'ai-theme';
 
     // Assemble theme files
-    const files = assembleTheme(result.validation.data, slug);
+    const files = assembleTheme(enhanced, slug);
 
     // Package as ZIP
     const zipBuffer = await packageThemeBuffer(files);
@@ -72,11 +76,11 @@ export async function POST(request: Request) {
     return Response.json({
       success: true,
       slug,
-      themeName: result.validation.data.themeName,
+      themeName: enhanced.themeName,
       files: files.map(f => ({ path: f.path, content: f.content })),
       zip: Buffer.from(zipBuffer).toString('base64'),
       toolCalls: result.toolCalls,
-      themeData: result.validation.data,
+      themeData: enhanced,
     });
   } catch (error) {
     console.error('Generation error:', error);

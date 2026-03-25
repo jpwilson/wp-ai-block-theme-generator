@@ -1,4 +1,5 @@
 import { iterateTheme } from '@/lib/ai/generate';
+import { enhanceTheme } from '@/lib/enhancer';
 import { assembleTheme } from '@/lib/assembler';
 import { packageThemeBuffer } from '@/lib/packager';
 import { ProviderConfig } from '@/lib/ai/providers';
@@ -57,19 +58,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const slug = result.validation.data.themeName
+    const enhanced = enhanceTheme(result.validation.data);
+
+    const slug = enhanced.themeName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
       .slice(0, 50) || 'ai-theme';
 
-    const files = assembleTheme(result.validation.data, slug);
+    const files = assembleTheme(enhanced, slug);
     const zipBuffer = await packageThemeBuffer(files);
 
     return Response.json({
       success: true,
       slug,
-      themeName: result.validation.data.themeName,
+      themeName: enhanced.themeName,
       files: files.map(f => ({ path: f.path, content: f.content })),
       zip: Buffer.from(zipBuffer).toString('base64'),
       toolCalls: result.toolCalls,
