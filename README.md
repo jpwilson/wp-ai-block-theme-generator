@@ -33,19 +33,35 @@ npm test
 
 ## How It Works
 
-1. **Describe your theme** — Enter a natural language description (e.g., "A dark mode photography portfolio with a full-width hero, grid gallery, and minimal navigation") plus optional technical criteria (colors, fonts, layout preferences).
+> **[See the full visual pipeline walkthrough](docs/how-it-works.md)** — explains the JSON intermediate approach, why LLMs can't write block markup directly, and how the no-Custom-HTML constraint is enforced at three levels.
 
-2. **AI generates structured JSON** — Claude produces a structured block-tree representation of the theme: `theme.json` design tokens, template compositions, pattern selections, and content — all as validated JSON, not raw markup.
+The key insight: **the AI never writes block markup**. It writes JSON. Our code does the rest.
 
-3. **Deterministic serialization** — The application converts the JSON block-trees into valid WordPress block markup (`<!-- wp:group -->`, `<!-- wp:cover -->`, etc.) using a deterministic serializer. This guarantees syntactically correct output.
+```
+User description
+     ↓
+AI returns JSON block-tree    ← AI is good at this (~98.5% valid)
+     ↓
+Zod schema validation         ← catch malformed JSON
+     ↓
+Block allowlist check          ← reject core/html, core/freeform, unknown blocks
+     ↓
+Deterministic serializer      ← tested code converts JSON → <!-- wp:* --> markup
+     ↓
+WordPress parser round-trip   ← confirm markup is valid using WP's own parser
+     ↓
+Theme assembler               ← style.css, theme.json, templates, parts, patterns
+     ↓
+ZIP + Playground preview      ← download or preview in-browser
+```
 
-4. **Three-layer validation** — Every response passes through: Zod schema validation → block allowlist checking (rejects `core/html` and `core/freeform`) → round-trip parsing with WordPress's official block parser.
-
-5. **Preview** — See your theme running in a live WordPress Playground instance (WP in the browser via WASM) — no local WordPress install needed.
-
-6. **Iterate** — Send follow-up instructions via the chat interface ("make the header sticky," "switch to a warmer palette") to refine the theme. Conversation history is preserved.
-
-7. **Download** — The validated theme files are packaged into a ZIP file ready to install on any WordPress 6.4+ site.
+1. **Describe your theme** — natural language + optional color/typography/layout preferences.
+2. **AI generates structured JSON** — block-tree representation, not raw markup.
+3. **Deterministic serialization** — our code converts JSON to valid `<!-- wp:* -->` markup.
+4. **Three-layer validation** — Zod → allowlist → WP parser round-trip.
+5. **Preview** — live WordPress Playground (WP in browser via WASM).
+6. **Iterate** — follow-up instructions via chat interface.
+7. **Download** — installable ZIP for any WordPress 6.4+ site.
 
 ---
 
