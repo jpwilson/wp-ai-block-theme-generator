@@ -936,7 +936,8 @@ function GenerationProgress() {
   // Find the current step based on elapsed time
   const currentStep = [...GENERATION_STEPS].reverse().find(s => elapsed >= s.at) || GENERATION_STEPS[0];
 
-  const fact = AUTOMATTIC_FACTS[elapsed % AUTOMATTIC_FACTS.length];
+  const factIndex = Math.floor(elapsed / 10) % AUTOMATTIC_FACTS.length;
+  const fact = AUTOMATTIC_FACTS[factIndex];
 
   return (
     <div className="text-center space-y-3 max-w-md mx-auto">
@@ -953,10 +954,13 @@ function GenerationProgress() {
       </div>
 
       {elapsed > 5 && (
-        <div className="mt-4 pt-4 border-t text-left">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1.5">Did you know?</p>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            <span className="font-semibold text-foreground">{fact.title}</span> — {fact.text}
+        <div className="mt-6 pt-5 border-t text-left">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2">Did you know?</p>
+          <p className="text-sm leading-relaxed">
+            <span className="font-bold">{fact.title}</span>
+          </p>
+          <p className="text-sm leading-relaxed text-muted-foreground mt-1">
+            {fact.text}
           </p>
         </div>
       )}

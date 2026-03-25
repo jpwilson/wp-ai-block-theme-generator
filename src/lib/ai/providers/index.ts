@@ -99,7 +99,7 @@ async function callOpenAICompatible(
         { role: 'user', content: userPrompt },
       ],
       temperature: 0.7,
-      max_tokens: 32000,
+      max_tokens: 12000,
       // Only include response_format for models known to support it.
       // Many OpenRouter models don't support it and will error or ignore it.
       ...(supportsJsonMode(model) ? { response_format: { type: 'json_object' } } : {}),
@@ -147,7 +147,7 @@ async function callAnthropic(
     signal: controller.signal,
     body: JSON.stringify({
       model,
-      max_tokens: 32000,
+      max_tokens: 12000,
       temperature: 0.7,
       system: systemPrompt,
       messages: [
