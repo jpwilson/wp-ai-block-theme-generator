@@ -252,6 +252,29 @@ GitHub Actions CI: lint + typecheck + vitest on every push/PR
 
 ---
 
+## AI vs Deterministic: What Decides What
+
+The hybrid architecture splits responsibility between AI creativity and deterministic code guarantees. The AI is never solely responsible for visual quality — deterministic post-processing ensures a professional baseline regardless of which model is used.
+
+| Design Aspect | AI Decides | Deterministic Code Guarantees |
+|---|---|---|
+| **Color palette** | Picks specific hex values based on user's color mood selection | Enhancer ensures 6+ colors exist, element styles (link, button, headings) are applied, contrast is usable |
+| **Typography** | Picks font families and relative sizing | Enhancer ensures fluid/clamp values for responsive scaling, heading hierarchy (h1-h3), line-heights set |
+| **Spacing** | May or may not add padding to sections | Enhancer forces generous padding on all group sections, ensures spacing scale exists in theme.json (7 sizes) |
+| **Hero section** | Designs the content, chooses imagery and text | Enhancer ensures cover blocks have min-height (80vh), full-width alignment, readable dim ratio |
+| **Section rhythm** | Decides section content and ordering | Enhancer alternates background colors from palette so the page isn't flat/monotone |
+| **Buttons** | Picks text, URL, and placement | Enhancer ensures backgroundColor from palette, border-radius (6px), font-weight |
+| **Header/Footer** | Decides structure and content | Templates always start with header template-part and end with footer — enforced by prompt and validation |
+| **Block markup** | Never writes it — only produces JSON | Serializer is 100% deterministic, tested code. AI cannot produce malformed markup |
+| **No Custom HTML** | Prompt says "NEVER use core/html" | Allowlist physically rejects it. Serializer cannot produce it. Three-layer defense in depth |
+| **Structured inputs** | Interprets site type, industry, style, mood | Prompt builder maps each dropdown value to specific design hints (e.g., "ecommerce" → "product grids, trust signals, shop CTAs") |
+
+This split means: even if the AI produces minimal styling (weak model, short response, missed instructions), the enhancer fills in professional defaults. And even if the AI tries to use forbidden blocks, the validator catches it. The AI handles creativity; the code handles correctness.
+
+See **[docs/how-it-works.md](how-it-works.md)** for a full visual walkthrough of the pipeline.
+
+---
+
 ## Supported Core Blocks (v1)
 
 These are the blocks the serializer will support. This list covers the needs of a complete blog/business theme without the Custom HTML block.
