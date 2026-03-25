@@ -70,9 +70,8 @@ const PROVIDER_MODELS: Record<ProviderName, ModelOption[]> = {
     { id: 'openai/o3', label: 'o3', group: 'OpenAI' },
     { id: 'openai/o3-mini', label: 'o3-mini', group: 'OpenAI' },
     // Google
-    { id: 'google/gemini-2.5-pro-preview', label: 'Gemini 2.5 Pro', group: 'Google' },
-    { id: 'google/gemini-2.5-flash-preview', label: 'Gemini 2.5 Flash', group: 'Google' },
-    { id: 'google/gemini-2.0-flash-001', label: 'Gemini 2.0 Flash', group: 'Google' },
+    { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', group: 'Google' },
+    { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', group: 'Google' },
     // xAI
     { id: 'x-ai/grok-3', label: 'Grok 3', group: 'xAI' },
     { id: 'x-ai/grok-3-mini', label: 'Grok 3 Mini', group: 'xAI' },
@@ -81,7 +80,7 @@ const PROVIDER_MODELS: Record<ProviderName, ModelOption[]> = {
     { id: 'meta-llama/llama-4-scout', label: 'Llama 4 Scout', group: 'Meta' },
     // DeepSeek
     { id: 'deepseek/deepseek-r1', label: 'DeepSeek R1', group: 'DeepSeek' },
-    { id: 'deepseek/deepseek-chat-v3', label: 'DeepSeek V3', group: 'DeepSeek' },
+    { id: 'deepseek/deepseek-chat', label: 'DeepSeek V3', group: 'DeepSeek' },
   ],
   anthropic: [
     { id: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
