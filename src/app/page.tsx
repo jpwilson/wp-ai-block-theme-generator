@@ -126,6 +126,47 @@ const DEFAULT_MODELS: Record<ProviderName, string> = {
   custom: 'gpt-4o',
 };
 
+const PAGE_OPTIONS = [
+  'Home', 'About', 'Services', 'Blog', 'Contact',
+  'Shop', 'Portfolio', 'Pricing', 'Team', 'FAQ',
+  'Testimonials', 'Gallery', 'Events', 'Careers',
+];
+
+const DEMO_DESCRIPTIONS = [
+  {
+    label: 'Photography Portfolio',
+    text: 'A dark, cinematic photography portfolio showcasing landscape and street photography. Full-width hero with a dramatic mountain shot, grid gallery of recent work, and a minimal about section.',
+    siteType: 'portfolio',
+    industry: 'photography',
+    style: 'minimal',
+    colorMood: 'dark',
+  },
+  {
+    label: 'SaaS Landing Page',
+    text: 'A modern SaaS product landing page for a project management tool. Hero with product screenshot, feature grid with icons, pricing table, testimonials from companies, and a prominent free trial CTA.',
+    siteType: 'saas',
+    industry: 'technology',
+    style: 'bold',
+    colorMood: 'cool',
+  },
+  {
+    label: 'Restaurant / Cafe',
+    text: 'A warm, inviting website for an Italian restaurant. Large hero with food imagery, menu sections organized by course, chef\'s story section, location with hours, and a reservation call-to-action.',
+    siteType: 'restaurant',
+    industry: 'food',
+    style: 'elegant',
+    colorMood: 'warm',
+  },
+  {
+    label: 'Creative Agency',
+    text: 'A bold, striking website for a digital design agency. Full-screen video hero, case study grid with hover effects, services breakdown, team section with photos, and a "start a project" contact form.',
+    siteType: 'agency',
+    industry: 'creative',
+    style: 'bold',
+    colorMood: 'vibrant',
+  },
+];
+
 export default function Home() {
   // Provider state
   const [provider, setProvider] = useState<ProviderName>('openrouter');
@@ -453,11 +494,28 @@ export default function Home() {
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
-                  placeholder="A dark mode photography portfolio with a full-width hero, grid gallery, and minimal navigation..."
+                  placeholder="Describe the website you want..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
+                  rows={3}
                 />
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {DEMO_DESCRIPTIONS.map((demo, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setDescription(demo.text);
+                        if (demo.siteType) setSiteType(demo.siteType);
+                        if (demo.industry) setIndustry(demo.industry);
+                        if (demo.style) setStyle(demo.style);
+                        if (demo.colorMood) setColorMood(demo.colorMood);
+                      }}
+                      className="text-xs px-2.5 py-1 rounded-full border hover:bg-muted transition-colors text-muted-foreground"
+                    >
+                      {demo.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -551,13 +609,36 @@ export default function Home() {
               </div>
 
               <div>
-                <Label>Key Pages</Label>
-                <Input
-                  placeholder="Home, About, Services, Blog, Contact, Shop, Portfolio..."
-                  value={pages}
-                  onChange={(e) => setPages(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground mt-1">Comma-separated list of pages your site needs</p>
+                <Label>Key Pages <span className="text-muted-foreground font-normal">(select up to 4)</span></Label>
+                <div className="flex flex-wrap gap-2 mt-1.5">
+                  {PAGE_OPTIONS.map((page) => {
+                    const selected = pages.split(',').map(p => p.trim()).filter(Boolean).includes(page);
+                    const currentPages = pages.split(',').map(p => p.trim()).filter(Boolean);
+                    const atLimit = currentPages.length >= 4 && !selected;
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => {
+                          if (selected) {
+                            setPages(currentPages.filter(p => p !== page).join(', '));
+                          } else if (!atLimit) {
+                            setPages([...currentPages, page].join(', '));
+                          }
+                        }}
+                        disabled={atLimit}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                          selected
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : atLimit
+                              ? 'opacity-40 cursor-not-allowed'
+                              : 'hover:bg-muted'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <Button
