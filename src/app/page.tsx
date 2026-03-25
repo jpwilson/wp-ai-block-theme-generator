@@ -392,13 +392,23 @@ export default function Home() {
   const selectedFileContent = files.find(f => f.path === selectedFile)?.content || '';
 
   return (
-    <main className="flex-1 container mx-auto max-w-7xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">WP Block Theme Generator</h1>
-        <p className="text-muted-foreground mt-2">
-          Generate complete WordPress Block Themes from natural language. No Custom HTML blocks — only native core blocks.
-        </p>
+    <>
+    <header className="border-b bg-card">
+      <div className="container mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">W</div>
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight leading-none">Block Theme Generator</h1>
+            <p className="text-xs text-muted-foreground">AI-powered WordPress themes — zero Custom HTML blocks</p>
+          </div>
+        </div>
+        <nav className="flex items-center gap-4 text-sm">
+          <a href="/changelog" className="text-muted-foreground hover:text-foreground transition-colors">Changelog</a>
+          <a href="https://github.com/jpwilson/wp-ai-block-theme-generator" target="_blank" rel="noopener" className="text-muted-foreground hover:text-foreground transition-colors">GitHub</a>
+        </nav>
       </div>
+    </header>
+    <main className="flex-1 container mx-auto max-w-7xl px-4 py-6">
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left column: Input */}
@@ -894,6 +904,7 @@ export default function Home() {
         </div>
       </div>
     </main>
+    </>
   );
 }
 
