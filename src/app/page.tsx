@@ -132,6 +132,43 @@ const PAGE_OPTIONS = [
   'Testimonials', 'Gallery', 'Events', 'Careers',
 ];
 
+/** Approximate pricing per 1M tokens by model (input, output) in USD */
+const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+  // Anthropic
+  'claude-sonnet-4.6': { input: 3, output: 15 },
+  'claude-sonnet-4-6': { input: 3, output: 15 },
+  'anthropic/claude-sonnet-4.6': { input: 3, output: 15 },
+  'claude-opus-4.6': { input: 15, output: 75 },
+  'claude-opus-4-6': { input: 15, output: 75 },
+  'anthropic/claude-opus-4.6': { input: 15, output: 75 },
+  // OpenAI
+  'gpt-4.1': { input: 2, output: 8 },
+  'openai/gpt-4.1': { input: 2, output: 8 },
+  'gpt-4.1-mini': { input: 0.4, output: 1.6 },
+  'openai/gpt-4.1-mini': { input: 0.4, output: 1.6 },
+  'gpt-4o': { input: 2.5, output: 10 },
+  'openai/gpt-4o': { input: 2.5, output: 10 },
+  // Google
+  'gemini-2.5-pro': { input: 1.25, output: 10 },
+  'google/gemini-2.5-pro': { input: 1.25, output: 10 },
+  'gemini-2.5-flash': { input: 0.15, output: 0.6 },
+  'google/gemini-2.5-flash': { input: 0.15, output: 0.6 },
+};
+
+const DEFAULT_PRICING = { input: 3, output: 15 };
+
+/** Estimate cost in dollars for a single AI call */
+function estimateCost(model: string, tokensIn: number, tokensOut: number): number {
+  // Try exact match first, then partial match on known model substrings
+  let pricing = MODEL_PRICING[model];
+  if (!pricing) {
+    const lower = model.toLowerCase();
+    const key = Object.keys(MODEL_PRICING).find((k) => lower.includes(k.toLowerCase()));
+    pricing = key ? MODEL_PRICING[key] : DEFAULT_PRICING;
+  }
+  return (tokensIn * pricing.input + tokensOut * pricing.output) / 1_000_000;
+}
+
 const DEMO_DESCRIPTIONS = [
   {
     label: 'Photography Portfolio',
@@ -373,7 +410,7 @@ export default function Home() {
               <CardDescription>Choose your AI provider and enter your API key</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="provider">Provider</Label>
                   <Select value={provider} onValueChange={(v) => { setProvider(v as ProviderName); setModel(''); }}>
@@ -518,7 +555,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Site Type</Label>
                   <Select value={siteType} onValueChange={(v) => setSiteType(v ?? '')}>
@@ -560,7 +597,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <Label>Style</Label>
                   <Select value={style} onValueChange={(v) => setStyle(v ?? '')}>
@@ -729,9 +766,9 @@ export default function Home() {
                     </TabsList>
 
                     <TabsContent value="files" className="m-0">
-                      <div className="grid grid-cols-[200px_1fr] divide-x min-h-[400px]">
+                      <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] md:divide-x min-h-[400px]">
                         {/* File tree */}
-                        <ScrollArea className="h-[500px]">
+                        <ScrollArea className="h-[200px] md:h-[500px] border-b md:border-b-0">
                           <div className="p-2 space-y-0.5">
                             {files.map((file) => (
                               <button
@@ -750,8 +787,8 @@ export default function Home() {
                         </ScrollArea>
 
                         {/* File content */}
-                        <ScrollArea className="h-[500px]">
-                          <pre className="p-4 text-xs font-mono whitespace-pre-wrap">
+                        <ScrollArea className="h-[300px] md:h-[500px]">
+                          <pre className="p-4 text-xs font-mono whitespace-pre-wrap break-all">
                             {selectedFileContent}
                           </pre>
                         </ScrollArea>
@@ -779,9 +816,10 @@ export default function Home() {
                                     <span className="font-mono text-xs">{call.provider}</span>
                                     <span className="text-muted-foreground">{call.model}</span>
                                   </div>
-                                  <span className="text-muted-foreground">
-                                    {(call.latencyMs / 1000).toFixed(1)}s
-                                  </span>
+                                  <div className="flex items-center gap-3 text-muted-foreground">
+                                    <span>${estimateCost(call.model, call.tokensIn, call.tokensOut).toFixed(4)}</span>
+                                    <span>{(call.latencyMs / 1000).toFixed(1)}s</span>
+                                  </div>
                                 </div>
                                 <div className="flex gap-4 text-xs text-muted-foreground">
                                   <span>Tokens in: {call.tokensIn.toLocaleString()}</span>
@@ -796,7 +834,7 @@ export default function Home() {
 
                             <Separator />
 
-                            <div className="grid grid-cols-3 gap-4 text-center text-sm">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-sm">
                               <div>
                                 <p className="text-2xl font-bold">{toolCalls.length}</p>
                                 <p className="text-muted-foreground">Total Calls</p>
@@ -814,6 +852,12 @@ export default function Home() {
                                     : 0}s
                                 </p>
                                 <p className="text-muted-foreground">Avg Latency</p>
+                              </div>
+                              <div>
+                                <p className="text-2xl font-bold">
+                                  ${toolCalls.reduce((s, c) => s + estimateCost(c.model, c.tokensIn, c.tokensOut), 0).toFixed(2)}
+                                </p>
+                                <p className="text-muted-foreground">Est. Cost</p>
                               </div>
                             </div>
                           </div>
