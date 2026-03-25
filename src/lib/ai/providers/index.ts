@@ -24,10 +24,10 @@ export interface GenerationResult {
 
 /** Default models per provider */
 export const DEFAULT_MODELS: Record<ProviderName, string> = {
-  openrouter: 'anthropic/claude-sonnet-4',
-  anthropic: 'claude-sonnet-4-20250514',
+  openrouter: 'anthropic/claude-sonnet-4.6',
+  anthropic: 'claude-sonnet-4-6-20250514',
   openai: 'gpt-4.1',
-  grok: 'grok-3',
+  grok: 'grok-4',
   custom: 'gpt-4o',
 };
 

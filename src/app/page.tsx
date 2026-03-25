@@ -56,46 +56,60 @@ interface ModelOption {
   group?: string;
 }
 
+/** Model IDs verified against OpenRouter /api/v1/models on 2026-03-24 */
 const PROVIDER_MODELS: Record<ProviderName, ModelOption[]> = {
   openrouter: [
-    // Anthropic
-    { id: 'anthropic/claude-opus-4', label: 'Claude Opus 4', group: 'Anthropic' },
+    // Anthropic — verified: anthropic/claude-opus-4.6, etc.
+    { id: 'anthropic/claude-opus-4.6', label: 'Claude Opus 4.6', group: 'Anthropic' },
+    { id: 'anthropic/claude-sonnet-4.6', label: 'Claude Sonnet 4.6', group: 'Anthropic' },
+    { id: 'anthropic/claude-opus-4.5', label: 'Claude Opus 4.5', group: 'Anthropic' },
+    { id: 'anthropic/claude-sonnet-4.5', label: 'Claude Sonnet 4.5', group: 'Anthropic' },
+    { id: 'anthropic/claude-haiku-4.5', label: 'Claude Haiku 4.5', group: 'Anthropic' },
     { id: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4', group: 'Anthropic' },
-    { id: 'anthropic/claude-haiku-4', label: 'Claude Haiku 4', group: 'Anthropic' },
     { id: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet', group: 'Anthropic' },
-    // OpenAI
+    // OpenAI — verified: openai/gpt-4.1, openai/o4-mini, etc.
     { id: 'openai/gpt-4.1', label: 'GPT-4.1', group: 'OpenAI' },
     { id: 'openai/gpt-4.1-mini', label: 'GPT-4.1 Mini', group: 'OpenAI' },
+    { id: 'openai/gpt-4.1-nano', label: 'GPT-4.1 Nano', group: 'OpenAI' },
     { id: 'openai/gpt-4o', label: 'GPT-4o', group: 'OpenAI' },
+    { id: 'openai/o4-mini', label: 'o4-mini', group: 'OpenAI' },
     { id: 'openai/o3', label: 'o3', group: 'OpenAI' },
     { id: 'openai/o3-mini', label: 'o3-mini', group: 'OpenAI' },
-    // Google
+    // Google — verified: google/gemini-2.5-pro, google/gemini-3-pro-preview, etc.
     { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', group: 'Google' },
     { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', group: 'Google' },
-    // xAI
+    { id: 'google/gemini-3-pro-preview', label: 'Gemini 3 Pro (preview)', group: 'Google' },
+    { id: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (preview)', group: 'Google' },
+    // xAI — verified: x-ai/grok-4, x-ai/grok-3, etc.
+    { id: 'x-ai/grok-4', label: 'Grok 4', group: 'xAI' },
+    { id: 'x-ai/grok-4-fast', label: 'Grok 4 Fast', group: 'xAI' },
     { id: 'x-ai/grok-3', label: 'Grok 3', group: 'xAI' },
     { id: 'x-ai/grok-3-mini', label: 'Grok 3 Mini', group: 'xAI' },
-    // Meta
+    // Meta — verified: meta-llama/llama-4-maverick, etc.
     { id: 'meta-llama/llama-4-maverick', label: 'Llama 4 Maverick', group: 'Meta' },
     { id: 'meta-llama/llama-4-scout', label: 'Llama 4 Scout', group: 'Meta' },
-    // DeepSeek
+    // DeepSeek — verified: deepseek/deepseek-r1, deepseek/deepseek-v3.2, etc.
+    { id: 'deepseek/deepseek-v3.2', label: 'DeepSeek V3.2', group: 'DeepSeek' },
     { id: 'deepseek/deepseek-r1', label: 'DeepSeek R1', group: 'DeepSeek' },
     { id: 'deepseek/deepseek-chat', label: 'DeepSeek V3', group: 'DeepSeek' },
   ],
   anthropic: [
-    { id: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
+    { id: 'claude-opus-4-6-20250616', label: 'Claude Opus 4.6' },
+    { id: 'claude-sonnet-4-6-20250514', label: 'Claude Sonnet 4.6' },
     { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
-    { id: 'claude-haiku-4-20250414', label: 'Claude Haiku 4' },
+    { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' },
     { id: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
   ],
   openai: [
     { id: 'gpt-4.1', label: 'GPT-4.1' },
     { id: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' },
     { id: 'gpt-4o', label: 'GPT-4o' },
+    { id: 'o4-mini', label: 'o4-mini' },
     { id: 'o3', label: 'o3' },
-    { id: 'o3-mini', label: 'o3 Mini' },
+    { id: 'o3-mini', label: 'o3-mini' },
   ],
   grok: [
+    { id: 'grok-4', label: 'Grok 4' },
     { id: 'grok-3', label: 'Grok 3' },
     { id: 'grok-3-mini', label: 'Grok 3 Mini' },
   ],
@@ -105,7 +119,7 @@ const PROVIDER_MODELS: Record<ProviderName, ModelOption[]> = {
 };
 
 const DEFAULT_MODELS: Record<ProviderName, string> = {
-  openrouter: 'anthropic/claude-sonnet-4',
+  openrouter: 'anthropic/claude-sonnet-4.6',
   anthropic: 'claude-sonnet-4-20250514',
   openai: 'gpt-4.1',
   grok: 'grok-3',
