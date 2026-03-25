@@ -49,32 +49,58 @@ export async function generateTheme(
       // Try to parse the JSON from the response
       let parsed: unknown;
       try {
-        // Handle case where AI wraps JSON in markdown code fences
         const jsonStr = extractJson(result.content);
         parsed = JSON.parse(jsonStr);
       } catch (parseError) {
         console.error('[AI] Failed to parse JSON:', (parseError as Error).message);
         console.error('[AI] Raw response (first 500 chars):', result.content.slice(0, 500));
-        const call = logToolCall({
-          provider: config.provider,
-          model: result.model,
-          tokensIn: result.tokensIn,
-          tokensOut: result.tokensOut,
-          latencyMs,
-          success: false,
-          error: 'Invalid JSON in response',
-          retryCount: attempt,
-        });
-        toolCalls.push(call);
 
-        lastValidation = {
-          valid: false,
-          errors: [{
-            layer: 'schema',
-            message: 'AI response is not valid JSON',
-          }],
-        };
-        continue;
+        // Attempt JSON repair with a fast, cheap model
+        console.log('[AI] Attempting JSON repair with fast model...');
+        try {
+          const repaired = await repairJson(config, result.content);
+          if (repaired) {
+            const repairedStr = extractJson(repaired);
+            parsed = JSON.parse(repairedStr);
+            console.log('[AI] JSON repair succeeded');
+
+            const repairCall = logToolCall({
+              provider: config.provider,
+              model: 'repair-model',
+              tokensIn: 0,
+              tokensOut: 0,
+              latencyMs: Date.now() - start - latencyMs,
+              success: true,
+              retryCount: attempt,
+            });
+            toolCalls.push(repairCall);
+          }
+        } catch (repairError) {
+          console.error('[AI] JSON repair also failed:', (repairError as Error).message);
+        }
+
+        if (!parsed) {
+          const call = logToolCall({
+            provider: config.provider,
+            model: result.model,
+            tokensIn: result.tokensIn,
+            tokensOut: result.tokensOut,
+            latencyMs,
+            success: false,
+            error: 'Invalid JSON in response (repair also failed)',
+            retryCount: attempt,
+          });
+          toolCalls.push(call);
+
+          lastValidation = {
+            valid: false,
+            errors: [{
+              layer: 'schema',
+              message: 'AI response is not valid JSON. The model returned malformed output that could not be repaired.',
+            }],
+          };
+          continue;
+        }
       }
 
       // Validate the parsed response
@@ -221,4 +247,43 @@ function extractJson(content: string): string {
   const end = trimmed.lastIndexOf('}');
   if (start !== -1 && end !== -1) return trimmed.slice(start, end + 1);
   return trimmed;
+}
+
+/**
+ * Attempt to repair broken JSON using a fast, cheap model.
+ * Sends the broken JSON to a small model that only needs to fix syntax.
+ */
+async function repairJson(
+  config: ProviderConfig,
+  brokenContent: string,
+): Promise<string | null> {
+  // Use a fast model for repair — pick the cheapest available
+  const repairModel = getRepairModel(config.provider);
+
+  try {
+    const result = await callProvider(
+      { ...config, model: repairModel },
+      `You are a JSON repair tool. The user will give you broken or truncated JSON. Fix it and return ONLY the valid JSON. Do not explain anything. If the JSON is truncated, close all open brackets/braces/arrays to make it valid. Remove any non-JSON text before or after the JSON object.`,
+      `Fix this broken JSON and return ONLY the repaired JSON object:\n\n${brokenContent.slice(0, 12000)}`,
+    );
+    return result.content;
+  } catch (e) {
+    console.error('[AI] Repair model failed:', e);
+    return null;
+  }
+}
+
+function getRepairModel(provider: string): string {
+  switch (provider) {
+    case 'openrouter':
+      return 'openai/gpt-4.1-mini'; // Fast, cheap, good at JSON
+    case 'anthropic':
+      return 'claude-haiku-4-5-20251001';
+    case 'openai':
+      return 'gpt-4.1-mini';
+    case 'grok':
+      return 'grok-3-mini';
+    default:
+      return 'openai/gpt-4.1-mini';
+  }
 }
