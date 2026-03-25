@@ -403,6 +403,7 @@ export default function Home() {
           </div>
         </div>
         <nav className="flex items-center gap-4 text-sm">
+          <a href="/spec" className="text-muted-foreground hover:text-foreground transition-colors">Spec</a>
           <a href="/changelog" className="text-muted-foreground hover:text-foreground transition-colors">Changelog</a>
           <a href="https://github.com/jpwilson/wp-ai-block-theme-generator" target="_blank" rel="noopener" className="text-muted-foreground hover:text-foreground transition-colors">GitHub</a>
         </nav>
@@ -935,11 +936,13 @@ function GenerationProgress() {
   // Find the current step based on elapsed time
   const currentStep = [...GENERATION_STEPS].reverse().find(s => elapsed >= s.at) || GENERATION_STEPS[0];
 
+  const fact = AUTOMATTIC_FACTS[elapsed % AUTOMATTIC_FACTS.length];
+
   return (
-    <div className="text-center space-y-2">
+    <div className="text-center space-y-3 max-w-md mx-auto">
       <p className="text-sm font-medium">{currentStep.label}</p>
       <p className="text-xs text-muted-foreground">{currentStep.detail}</p>
-      <div className="flex items-center justify-center gap-3 mt-3">
+      <div className="flex items-center justify-center gap-3">
         <p className="text-xs text-muted-foreground font-mono">{elapsed}s</p>
         <div className="w-32 h-1.5 bg-muted rounded-full overflow-hidden">
           <div
@@ -948,6 +951,30 @@ function GenerationProgress() {
           />
         </div>
       </div>
+
+      {elapsed > 5 && (
+        <div className="mt-4 pt-4 border-t text-left">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1.5">Did you know?</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            <span className="font-semibold text-foreground">{fact.title}</span> — {fact.text}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
+
+const AUTOMATTIC_FACTS = [
+  { title: 'WordPress powers 43% of the web', text: 'From personal blogs to enterprise sites like Time.com, TechCrunch, and the White House — all running on WordPress.' },
+  { title: 'Automattic is fully distributed', text: '2,000+ employees across 97 countries, no central office. One of the largest fully remote companies in the world since 2005.' },
+  { title: 'WooCommerce runs 4M+ online stores', text: 'Acquired by Automattic in 2015, WooCommerce is the most popular eCommerce platform, powering 25% of the top 1M stores.' },
+  { title: 'Tumblr joined Automattic in 2019', text: 'Acquired from Verizon, Tumblr hosts 500M+ blogs and serves 11B+ monthly page views under Automattic.' },
+  { title: 'WordPress.com hosts 70M+ sites', text: 'The hosted platform serves everything from free blogs to enterprise WordPress installations for Fortune 500 companies.' },
+  { title: 'Jetpack protects 31M+ WordPress sites', text: 'Security, backups, performance, and growth tools — Jetpack is installed on 31 million sites worldwide.' },
+  { title: 'Full Site Editing (FSE) changed everything', text: 'Launched with WordPress 5.9 in 2022, FSE replaced PHP templates with block-based HTML — the foundation this tool builds on.' },
+  { title: 'The Five for the Future pledge', text: 'Automattic contributes 5% of resources to WordPress open source development. Matt Mullenweg co-founded WordPress in 2003.' },
+  { title: 'Pocket Casts has 1M+ subscribers', text: 'The podcast app was acquired by Automattic in 2021 and serves listeners with 10M+ downloads.' },
+  { title: 'Day One is the #1 journaling app', text: 'Acquired in 2021, Day One has 15M+ downloads and is Apple\'s App of the Year winner.' },
+  { title: 'Gutenberg is named after a printing press', text: 'The WordPress block editor project is named after Johannes Gutenberg, inventor of the movable-type printing press in 1440.' },
+  { title: 'Akismet has blocked 500B+ spam comments', text: 'Built by Automattic, Akismet is the most popular anti-spam plugin, protecting 31M+ sites since 2005.' },
+];
