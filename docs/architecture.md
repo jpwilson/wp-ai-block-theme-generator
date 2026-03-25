@@ -275,6 +275,48 @@ See **[docs/how-it-works.md](how-it-works.md)** for a full visual walkthrough of
 
 ---
 
+## Cost and Scaling Estimates
+
+### Cost Per Generation by Model
+
+A typical theme generation uses ~3,000-5,000 input tokens (system prompt + user description) and ~8,000-15,000 output tokens (structured JSON theme). The table below uses 4,000 input / 12,000 output as representative values.
+
+| Model | Input (per 1M) | Output (per 1M) | Est. Cost per Generation |
+|---|---|---|---|
+| Claude Sonnet 4.6 | $3.00 | $15.00 | ~$0.19 |
+| Claude Opus 4.6 | $15.00 | $75.00 | ~$0.96 |
+| GPT-4.1 | $2.00 | $8.00 | ~$0.10 |
+| GPT-4.1 Mini | $0.40 | $1.60 | ~$0.02 |
+| GPT-4o | $2.50 | $10.00 | ~$0.13 |
+| Gemini 2.5 Pro | $1.25 | $10.00 | ~$0.13 |
+| Gemini 2.5 Flash | $0.15 | $0.60 | ~$0.01 |
+
+*Iterative refinements use similar token counts, so each follow-up costs roughly the same as an initial generation.*
+
+### Estimated Monthly Costs
+
+| Usage Level | GPT-4.1 Mini | GPT-4.1 / Gemini 2.5 Pro | Claude Sonnet 4.6 | Claude Opus 4.6 |
+|---|---|---|---|---|
+| 100 generations/mo | ~$2 | ~$10-13 | ~$19 | ~$96 |
+| 1,000 generations/mo | ~$20 | ~$100-130 | ~$190 | ~$960 |
+| 10,000 generations/mo | ~$200 | ~$1,000-1,300 | ~$1,900 | ~$9,600 |
+
+### Scaling Considerations
+
+- **Stateless architecture (no DB required):** The app has no database dependency for core generation. Each request is self-contained: prompt in, theme out. This makes horizontal scaling trivial.
+- **Vercel serverless deployment:** Each generation request runs as an independent serverless function invocation. Vercel auto-scales based on demand with no provisioning needed.
+- **AI API is the bottleneck:** Generation latency is dominated by AI response time (10-90s depending on model). The validation, serialization, and ZIP assembly steps take <500ms combined. Scaling is limited by AI provider rate limits, not compute.
+- **No shared state:** Since there is no database or shared cache, there are no concurrency issues. Multiple generations can run in parallel up to the AI provider's rate limit.
+
+### Rate Limiting Strategy (Deployed Version)
+
+- **Per-IP rate limiting:** The deployed version limits requests per IP address to prevent abuse (e.g., 10 generations per hour, 50 per day).
+- **Server-configured key budget:** When using the pre-configured OpenRouter API key, a monthly spend cap is set on the OpenRouter dashboard to prevent runaway costs.
+- **User-provided keys bypass limits:** Users who bring their own API key are not subject to generation rate limits (they bear their own costs), though basic abuse prevention (e.g., request size limits) still applies.
+- **Implementation:** Rate limiting is handled via in-memory counters in the API route, suitable for single-instance Vercel deployments. For multi-region deployment, Vercel KV or Upstash Redis would be used instead.
+
+---
+
 ## Supported Core Blocks (v1)
 
 These are the blocks the serializer will support. This list covers the needs of a complete blog/business theme without the Custom HTML block.
