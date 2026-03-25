@@ -94,10 +94,9 @@ const PROVIDER_MODELS: Record<ProviderName, ModelOption[]> = {
     { id: 'deepseek/deepseek-chat', label: 'DeepSeek V3', group: 'DeepSeek' },
   ],
   anthropic: [
-    { id: 'claude-opus-4-6-20250616', label: 'Claude Opus 4.6' },
-    { id: 'claude-sonnet-4-6-20250514', label: 'Claude Sonnet 4.6' },
+    { id: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
     { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
-    { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' },
+    { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (fast)' },
     { id: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
   ],
   openai: [
@@ -120,7 +119,7 @@ const PROVIDER_MODELS: Record<ProviderName, ModelOption[]> = {
 
 const DEFAULT_MODELS: Record<ProviderName, string> = {
   openrouter: 'anthropic/claude-sonnet-4.6',
-  anthropic: 'claude-sonnet-4-20250514',
+  anthropic: 'claude-sonnet-4-20250514', // verified working
   openai: 'gpt-4.1',
   grok: 'grok-3',
   custom: 'gpt-4o',
@@ -206,7 +205,7 @@ const DEMO_DESCRIPTIONS = [
 
 export default function Home() {
   // Provider state
-  const [provider, setProvider] = useState<ProviderName>('openrouter');
+  const [provider, setProvider] = useState<ProviderName>('anthropic');
   const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState('');
   const [customBaseUrl, setCustomBaseUrl] = useState('');
@@ -221,6 +220,7 @@ export default function Home() {
   const [colorMood, setColorMood] = useState('');
   const [headerStyle, setHeaderStyle] = useState('');
   const [pages, setPages] = useState('');
+  const [promptSize, setPromptSize] = useState<'minimal' | 'standard' | 'detailed'>('standard');
   // Keep for backward compat with API
   const [colorPalette] = useState('');
   const [typography] = useState('');
@@ -268,6 +268,7 @@ export default function Home() {
           colorMood: colorMood || undefined,
           headerStyle: headerStyle || undefined,
           pages: pages || undefined,
+          promptSize,
           colorPalette: colorPalette || undefined,
           typography: typography || undefined,
           layoutStyle: layoutStyle || undefined,
@@ -657,6 +658,18 @@ export default function Home() {
               </div>
 
               <div>
+                <Label>Prompt Size</Label>
+                <Select value={promptSize} onValueChange={(v) => setPromptSize((v ?? 'standard') as 'minimal' | 'standard' | 'detailed')}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="minimal">Minimal (fastest, ~30s)</SelectItem>
+                    <SelectItem value="standard">Standard (~60s)</SelectItem>
+                    <SelectItem value="detailed">Detailed (slowest, ~90s+)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
                 <Label>Key Pages <span className="text-muted-foreground font-normal">(select up to 4)</span></Label>
                 <div className="flex flex-wrap gap-2 mt-1.5">
                   {PAGE_OPTIONS.map((page) => {
@@ -774,6 +787,7 @@ export default function Home() {
                       <TabsTrigger value="files">Files</TabsTrigger>
                       <TabsTrigger value="preview">Preview</TabsTrigger>
                       <TabsTrigger value="stats">AI Stats</TabsTrigger>
+                      <TabsTrigger value="prompt">Prompt</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="files" className="m-0">
@@ -875,6 +889,20 @@ export default function Home() {
                         )}
                       </div>
                     </TabsContent>
+
+                    <TabsContent value="prompt" className="m-0 p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold">System Prompt Used</h3>
+                          <Badge variant="secondary">{promptSize}</Badge>
+                        </div>
+                        <ScrollArea className="h-[400px]">
+                          <pre className="text-xs font-mono whitespace-pre-wrap bg-muted p-3 rounded-md">
+                            {getSystemPromptPreview(promptSize)}
+                          </pre>
+                        </ScrollArea>
+                      </div>
+                    </TabsContent>
                   </Tabs>
                 </CardContent>
               </Card>
@@ -966,6 +994,15 @@ function GenerationProgress() {
       )}
     </div>
   );
+}
+
+function getSystemPromptPreview(size: string): string {
+  const prompts: Record<string, string> = {
+    minimal: `[MINIMAL] WordPress Block Theme expert. Generate theme JSON.\n\nRULES: No core/html, no core/freeform. JSON only.\nOnly 2 templates (index, page), 1 pattern. Short content.`,
+    standard: `[STANDARD] WordPress Block Theme expert. Generate theme JSON.\n\nRULES: No core/html, no core/freeform. JSON only.\n4 templates (index, single, page, 404), 2 patterns.\nDesign: 6+ colors, 2 fonts, clamp() sizes, element styles.\nCover: 80vh, Unsplash URLs. Alternate section colors.`,
+    detailed: `[DETAILED] WordPress Block Theme expert. Generate premium theme.\n\nRULES: No core/html, no core/freeform. JSON only.\n6 templates + 3 patterns. Rich theme.json with spacingSizes.\nDesign: Cover 80vh, alternate colors, styled buttons.\nMake it look like a premium $79 theme.`,
+  };
+  return prompts[size] || prompts.standard;
 }
 
 const AUTOMATTIC_FACTS = [

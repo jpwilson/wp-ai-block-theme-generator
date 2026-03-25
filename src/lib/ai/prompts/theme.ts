@@ -10,6 +10,7 @@ export interface ThemeInput {
   colorMood?: string;
   headerStyle?: string;
   pages?: string;
+  promptSize?: string;
   colorPalette?: string;
   typography?: string;
   layoutStyle?: string;

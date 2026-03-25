@@ -1,5 +1,5 @@
 import { ProviderConfig, callProvider } from './providers';
-import { getSystemPrompt } from './prompts/system';
+import { getSystemPrompt, PromptSize } from './prompts/system';
 import { buildThemePrompt, buildIterationPrompt, ThemeInput } from './prompts/theme';
 import { validateAIResponse, ValidationResult } from '@/lib/validator';
 import { logToolCall, ToolCall } from './tool-tracker';
@@ -21,7 +21,7 @@ export async function generateTheme(
   config: ProviderConfig,
   input: ThemeInput,
 ): Promise<GenerateThemeResult> {
-  const systemPrompt = getSystemPrompt();
+  const systemPrompt = getSystemPrompt((input.promptSize as PromptSize) || 'standard');
   const userPrompt = buildThemePrompt(input);
   const toolCalls: ToolCall[] = [];
 
