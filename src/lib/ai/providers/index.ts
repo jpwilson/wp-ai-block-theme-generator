@@ -86,7 +86,7 @@ async function callOpenAICompatible(
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 90000); // 90s timeout
+  const timeout = setTimeout(() => controller.abort(), 120000); // 120s timeout
 
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
@@ -99,7 +99,7 @@ async function callOpenAICompatible(
         { role: 'user', content: userPrompt },
       ],
       temperature: 0.7,
-      max_tokens: 16000,
+      max_tokens: 8192,
       // Only include response_format for models known to support it.
       // Many OpenRouter models don't support it and will error or ignore it.
       ...(supportsJsonMode(model) ? { response_format: { type: 'json_object' } } : {}),
@@ -135,7 +135,7 @@ async function callAnthropic(
   userPrompt: string,
 ): Promise<GenerationResult> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 90000); // 90s timeout
+  const timeout = setTimeout(() => controller.abort(), 120000); // 120s timeout
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -147,7 +147,7 @@ async function callAnthropic(
     signal: controller.signal,
     body: JSON.stringify({
       model,
-      max_tokens: 16000,
+      max_tokens: 8192,
       temperature: 0.7,
       system: systemPrompt,
       messages: [
