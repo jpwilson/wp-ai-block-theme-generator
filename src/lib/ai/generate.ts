@@ -10,7 +10,7 @@ export interface GenerateThemeResult {
   rawResponse?: string;
 }
 
-const MAX_RETRIES = 2;
+const MAX_RETRIES = 1;
 
 /**
  * Generate a WordPress Block Theme from user input.

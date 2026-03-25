@@ -85,9 +85,13 @@ async function callOpenAICompatible(
     headers['X-Title'] = 'WP Block Theme Generator';
   }
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000); // 90s timeout
+
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers,
+    signal: controller.signal,
     body: JSON.stringify({
       model,
       messages: [
@@ -99,6 +103,8 @@ async function callOpenAICompatible(
       response_format: { type: 'json_object' },
     }),
   });
+
+  clearTimeout(timeout);
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => 'Unknown error');
@@ -126,6 +132,9 @@ async function callAnthropic(
   systemPrompt: string,
   userPrompt: string,
 ): Promise<GenerationResult> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000); // 90s timeout
+
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -133,6 +142,7 @@ async function callAnthropic(
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
     },
+    signal: controller.signal,
     body: JSON.stringify({
       model,
       max_tokens: 16000,
@@ -143,6 +153,8 @@ async function callAnthropic(
       ],
     }),
   });
+
+  clearTimeout(timeout);
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => 'Unknown error');
