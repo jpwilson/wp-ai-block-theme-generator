@@ -762,11 +762,7 @@ export default function Home() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4" />
-                <p className="text-sm text-muted-foreground">Generating your theme...</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Sonnet/GPT-4: ~20-40s. Opus: ~60-90s. The AI is generating a complete theme with 6+ templates.
-                </p>
-                <ElapsedTimer />
+                <GenerationProgress />
               </CardContent>
             </Card>
           )}
@@ -776,7 +772,20 @@ export default function Home() {
   );
 }
 
-function ElapsedTimer() {
+const GENERATION_STEPS = [
+  { at: 0,  label: 'Sending prompt to AI...', detail: 'Building system prompt with WordPress block rules and design guidelines' },
+  { at: 3,  label: 'AI is designing your theme...', detail: 'Choosing color palette, typography, and layout structure' },
+  { at: 8,  label: 'Generating theme.json...', detail: 'Design tokens: colors, fonts, spacing, element styles' },
+  { at: 14, label: 'Building templates...', detail: 'index, single, page, archive, 404, search — all with block markup' },
+  { at: 22, label: 'Creating header & footer...', detail: 'Navigation, site title, social links, copyright' },
+  { at: 30, label: 'Designing patterns...', detail: 'Hero section, features grid, call-to-action' },
+  { at: 40, label: 'Still generating...', detail: 'Complex themes with many blocks take longer' },
+  { at: 55, label: 'Almost there...', detail: 'AI is finalizing the complete theme JSON' },
+  { at: 75, label: 'Taking longer than usual...', detail: 'Large models (Opus) can take 60-90s for detailed output' },
+  { at: 95, label: 'Hang tight...', detail: 'If this takes over 2 minutes, the request may time out' },
+];
+
+function GenerationProgress() {
   const [elapsed, setElapsed] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -787,9 +796,22 @@ function ElapsedTimer() {
     };
   }, []);
 
+  // Find the current step based on elapsed time
+  const currentStep = [...GENERATION_STEPS].reverse().find(s => elapsed >= s.at) || GENERATION_STEPS[0];
+
   return (
-    <p className="text-xs text-muted-foreground mt-2 font-mono">
-      {elapsed}s elapsed
-    </p>
+    <div className="text-center space-y-2">
+      <p className="text-sm font-medium">{currentStep.label}</p>
+      <p className="text-xs text-muted-foreground">{currentStep.detail}</p>
+      <div className="flex items-center justify-center gap-3 mt-3">
+        <p className="text-xs text-muted-foreground font-mono">{elapsed}s</p>
+        <div className="w-32 h-1.5 bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary rounded-full transition-all duration-1000"
+            style={{ width: `${Math.min((elapsed / 60) * 100, 95)}%` }}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
