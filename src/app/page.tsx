@@ -123,9 +123,16 @@ export default function Home() {
 
   // Form state
   const [description, setDescription] = useState('');
-  const [colorPalette, setColorPalette] = useState('');
-  const [typography, setTypography] = useState('');
-  const [layoutStyle, setLayoutStyle] = useState('');
+  const [siteType, setSiteType] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [style, setStyle] = useState('');
+  const [colorMood, setColorMood] = useState('');
+  const [headerStyle, setHeaderStyle] = useState('');
+  const [pages, setPages] = useState('');
+  // Keep for backward compat with API
+  const [colorPalette] = useState('');
+  const [typography] = useState('');
+  const [layoutStyle] = useState('');
 
   // Generation state
   const [generating, setGenerating] = useState(false);
@@ -163,6 +170,12 @@ export default function Home() {
           model: model || undefined,
           baseUrl: provider === 'custom' ? customBaseUrl : undefined,
           description,
+          siteType: siteType || undefined,
+          industry: industry || undefined,
+          style: style || undefined,
+          colorMood: colorMood || undefined,
+          headerStyle: headerStyle || undefined,
+          pages: pages || undefined,
           colorPalette: colorPalette || undefined,
           typography: typography || undefined,
           layoutStyle: layoutStyle || undefined,
@@ -433,34 +446,104 @@ export default function Home() {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Site Type</Label>
+                  <Select value={siteType} onValueChange={(v) => setSiteType(v ?? '')}>
+                    <SelectTrigger><SelectValue placeholder="Select type..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="blog">Blog / Magazine</SelectItem>
+                      <SelectItem value="business">Business / Corporate</SelectItem>
+                      <SelectItem value="portfolio">Portfolio / Creative</SelectItem>
+                      <SelectItem value="ecommerce">eCommerce / Shop</SelectItem>
+                      <SelectItem value="restaurant">Restaurant / Food</SelectItem>
+                      <SelectItem value="agency">Agency / Studio</SelectItem>
+                      <SelectItem value="nonprofit">Nonprofit / Charity</SelectItem>
+                      <SelectItem value="personal">Personal / Resume</SelectItem>
+                      <SelectItem value="saas">SaaS / Tech Product</SelectItem>
+                      <SelectItem value="community">Community / Forum</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Industry</Label>
+                  <Select value={industry} onValueChange={(v) => setIndustry(v ?? '')}>
+                    <SelectTrigger><SelectValue placeholder="Select industry..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="technology">Technology</SelectItem>
+                      <SelectItem value="creative">Creative / Design</SelectItem>
+                      <SelectItem value="health">Health / Wellness</SelectItem>
+                      <SelectItem value="education">Education</SelectItem>
+                      <SelectItem value="finance">Finance / Legal</SelectItem>
+                      <SelectItem value="food">Food / Hospitality</SelectItem>
+                      <SelectItem value="fashion">Fashion / Beauty</SelectItem>
+                      <SelectItem value="real-estate">Real Estate</SelectItem>
+                      <SelectItem value="sports">Sports / Fitness</SelectItem>
+                      <SelectItem value="travel">Travel / Tourism</SelectItem>
+                      <SelectItem value="music">Music / Entertainment</SelectItem>
+                      <SelectItem value="photography">Photography</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="colors">Color Palette</Label>
-                  <Input
-                    id="colors"
-                    placeholder="Dark, moody tones"
-                    value={colorPalette}
-                    onChange={(e) => setColorPalette(e.target.value)}
-                  />
+                  <Label>Style</Label>
+                  <Select value={style} onValueChange={(v) => setStyle(v ?? '')}>
+                    <SelectTrigger><SelectValue placeholder="Select style..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="minimal">Minimal / Clean</SelectItem>
+                      <SelectItem value="bold">Bold / Striking</SelectItem>
+                      <SelectItem value="elegant">Elegant / Luxury</SelectItem>
+                      <SelectItem value="playful">Playful / Fun</SelectItem>
+                      <SelectItem value="corporate">Corporate / Professional</SelectItem>
+                      <SelectItem value="brutalist">Brutalist / Raw</SelectItem>
+                      <SelectItem value="editorial">Editorial / Magazine</SelectItem>
+                      <SelectItem value="warm">Warm / Friendly</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <Label htmlFor="typo">Typography</Label>
-                  <Input
-                    id="typo"
-                    placeholder="Modern sans-serif"
-                    value={typography}
-                    onChange={(e) => setTypography(e.target.value)}
-                  />
+                  <Label>Color Mood</Label>
+                  <Select value={colorMood} onValueChange={(v) => setColorMood(v ?? '')}>
+                    <SelectTrigger><SelectValue placeholder="Select mood..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dark">Dark / Moody</SelectItem>
+                      <SelectItem value="light">Light / Airy</SelectItem>
+                      <SelectItem value="warm">Warm (earth tones)</SelectItem>
+                      <SelectItem value="cool">Cool (blues, greens)</SelectItem>
+                      <SelectItem value="vibrant">Vibrant / Colorful</SelectItem>
+                      <SelectItem value="monochrome">Monochrome</SelectItem>
+                      <SelectItem value="pastel">Pastel / Soft</SelectItem>
+                      <SelectItem value="neon">Neon / Electric</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <Label htmlFor="layout">Layout Style</Label>
-                  <Input
-                    id="layout"
-                    placeholder="Full-width, minimal"
-                    value={layoutStyle}
-                    onChange={(e) => setLayoutStyle(e.target.value)}
-                  />
+                  <Label>Header</Label>
+                  <Select value={headerStyle} onValueChange={(v) => setHeaderStyle(v ?? '')}>
+                    <SelectTrigger><SelectValue placeholder="Select header..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sticky">Sticky Navigation</SelectItem>
+                      <SelectItem value="transparent">Transparent over Hero</SelectItem>
+                      <SelectItem value="centered">Centered Logo</SelectItem>
+                      <SelectItem value="minimal">Minimal / Hamburger</SelectItem>
+                      <SelectItem value="classic">Classic Left Logo + Right Nav</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+              </div>
+
+              <div>
+                <Label>Key Pages</Label>
+                <Input
+                  placeholder="Home, About, Services, Blog, Contact, Shop, Portfolio..."
+                  value={pages}
+                  onChange={(e) => setPages(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Comma-separated list of pages your site needs</p>
               </div>
 
               <Button

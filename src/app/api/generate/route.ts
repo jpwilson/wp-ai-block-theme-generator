@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { provider, apiKey, model, baseUrl, description, colorPalette, typography, layoutStyle } = body;
+    const { provider, apiKey, model, baseUrl, description, siteType, industry, style, colorMood, headerStyle, pages, colorPalette, typography, layoutStyle } = body;
 
     // Validate required fields
     if (!description || typeof description !== 'string' || description.trim().length === 0) {
@@ -40,6 +40,12 @@ export async function POST(request: Request) {
     // Generate the theme
     const result = await generateTheme(config, {
       description: description.trim(),
+      siteType,
+      industry,
+      style,
+      colorMood,
+      headerStyle,
+      pages,
       colorPalette,
       typography,
       layoutStyle,
