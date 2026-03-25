@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import Link from 'next/link';
 
 export default function ChangelogPage() {
   const changelogPath = path.join(process.cwd(), 'CHANGELOG.md');
@@ -28,7 +29,7 @@ export default function ChangelogPage() {
     <main className="container mx-auto max-w-3xl px-4 py-8">
       <div dangerouslySetInnerHTML={{ __html: html }} />
       <div className="mt-8 pt-4 border-t text-sm text-muted-foreground">
-        <a href="/" className="hover:underline">&larr; Back to generator</a>
+        <Link href="/" className="hover:underline">&larr; Back to generator</Link>
       </div>
     </main>
   );

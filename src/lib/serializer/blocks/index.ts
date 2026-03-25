@@ -255,14 +255,14 @@ function serializeSocialLink(block: BlockNode): InnerHTML {
 
 // --- Query / Post blocks ---
 
-function serializeQuery(block: BlockNode): InnerHTML {
+function serializeQuery(_block: BlockNode): InnerHTML {
   return {
     open: `<div class="wp-block-query">`,
     close: `</div>`,
   };
 }
 
-function serializePostTemplate(block: BlockNode): InnerHTML {
+function serializePostTemplate(_block: BlockNode): InnerHTML {
   // Post template is a container — innerBlocks are the loop body
   return {
     open: ``,
@@ -270,14 +270,14 @@ function serializePostTemplate(block: BlockNode): InnerHTML {
   };
 }
 
-function serializeQueryPagination(block: BlockNode): InnerHTML {
+function serializeQueryPagination(_block: BlockNode): InnerHTML {
   return {
     open: `<div class="wp-block-query-pagination">`,
     close: `</div>`,
   };
 }
 
-function serializeQueryNoResults(block: BlockNode): InnerHTML {
+function serializeQueryNoResults(_block: BlockNode): InnerHTML {
   return {
     open: ``,
     close: ``,

@@ -6,8 +6,6 @@ import { z } from 'zod';
  * Not exhaustive — covers the most common settings/styles used in block themes.
  */
 
-const colorValueSchema = z.string().regex(/^#[0-9a-fA-F]{3,8}$|^var\(--/, 'Invalid color value');
-
 const paletteItemSchema = z.object({
   slug: z.string().min(1),
   color: z.string().min(1),
