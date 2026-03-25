@@ -55,8 +55,9 @@ export function serializeBlockInner(block: BlockNode): InnerHTML | null {
 function serializeGroup(block: BlockNode): InnerHTML {
   const tagName = (block.attributes?.tagName as string) || 'div';
   const className = buildClassName('wp-block-group', block.attributes);
+  const style = buildStyleAttr(block.attributes);
   return {
-    open: `<${tagName} class="${className}">`,
+    open: `<${tagName} class="${className}"${style}>`,
     close: `</${tagName}>`,
   };
 }
@@ -82,11 +83,18 @@ function serializeColumn(block: BlockNode): InnerHTML {
 
 function serializeCover(block: BlockNode): InnerHTML {
   const className = buildClassName('wp-block-cover', block.attributes);
+  const dimRatio = (block.attributes?.dimRatio as number) ?? 50;
+  const styleObj = block.attributes?.style as Record<string, Record<string, string>> | undefined;
+  const minHeight = (block.attributes?.minHeight as string) || styleObj?.dimensions?.minHeight || '500px';
+  const style = buildStyleAttr(block.attributes);
   const parts: string[] = [];
-  parts.push(`<div class="${className}">`);
-  parts.push(`<span class="wp-block-cover__background has-background-dim"></span>`);
+  parts.push(`<div class="${className}"${style ? style : ` style="min-height:${minHeight}"`}>`);
+  parts.push(`<span class="wp-block-cover__background has-background-dim" style="opacity:${dimRatio / 100}"></span>`);
   if (block.attributes?.url) {
-    parts.push(`<img class="wp-block-cover__image-background" src="${escapeAttr(block.attributes.url as string)}" alt="" />`);
+    parts.push(`<img class="wp-block-cover__image-background" src="${escapeAttr(block.attributes.url as string)}" alt="" style="object-fit:cover" />`);
+  }
+  if (block.attributes?.overlayColor) {
+    // Will be handled by the background-dim + className
   }
   parts.push(`<div class="wp-block-cover__inner-container">`);
   return {
@@ -294,7 +302,76 @@ function buildClassName(base: string, attributes?: Record<string, unknown>): str
   if (attributes?.className) {
     classes.push(attributes.className as string);
   }
+  // WordPress preset color classes (these apply theme.json palette colors)
+  if (attributes?.backgroundColor) {
+    classes.push(`has-${attributes.backgroundColor}-background-color`);
+    classes.push('has-background');
+  }
+  if (attributes?.textColor) {
+    classes.push(`has-${attributes.textColor}-color`);
+    classes.push('has-text-color');
+  }
+  if (attributes?.gradient) {
+    classes.push(`has-${attributes.gradient}-gradient-background`);
+    classes.push('has-background');
+  }
+  if (attributes?.fontSize) {
+    classes.push(`has-${attributes.fontSize}-font-size`);
+  }
+  if (attributes?.fontFamily) {
+    classes.push(`has-${attributes.fontFamily}-font-family`);
+  }
   return classes.join(' ');
+}
+
+/** Build inline style string from block style attribute */
+function buildStyleAttr(attributes?: Record<string, unknown>): string {
+  const style = attributes?.style as Record<string, unknown> | undefined;
+  if (!style) return '';
+
+  const parts: string[] = [];
+
+  // Spacing
+  const spacing = style.spacing as Record<string, unknown> | undefined;
+  if (spacing?.padding) {
+    const p = spacing.padding as Record<string, string>;
+    if (p.top) parts.push(`padding-top:${p.top}`);
+    if (p.right) parts.push(`padding-right:${p.right}`);
+    if (p.bottom) parts.push(`padding-bottom:${p.bottom}`);
+    if (p.left) parts.push(`padding-left:${p.left}`);
+  }
+  if (spacing?.margin) {
+    const m = spacing.margin as Record<string, string>;
+    if (m.top) parts.push(`margin-top:${m.top}`);
+    if (m.bottom) parts.push(`margin-bottom:${m.bottom}`);
+  }
+  if (spacing?.blockGap) parts.push(`gap:${spacing.blockGap}`);
+
+  // Color
+  const color = style.color as Record<string, string> | undefined;
+  if (color?.background) parts.push(`background-color:${color.background}`);
+  if (color?.text) parts.push(`color:${color.text}`);
+  if (color?.gradient) parts.push(`background:${color.gradient}`);
+
+  // Typography
+  const typography = style.typography as Record<string, string> | undefined;
+  if (typography?.fontSize) parts.push(`font-size:${typography.fontSize}`);
+  if (typography?.fontWeight) parts.push(`font-weight:${typography.fontWeight}`);
+  if (typography?.lineHeight) parts.push(`line-height:${typography.lineHeight}`);
+  if (typography?.letterSpacing) parts.push(`letter-spacing:${typography.letterSpacing}`);
+
+  // Border
+  const border = style.border as Record<string, string> | undefined;
+  if (border?.radius) parts.push(`border-radius:${border.radius}`);
+  if (border?.width) parts.push(`border-width:${border.width}`);
+  if (border?.color) parts.push(`border-color:${border.color}`);
+
+  // Dimensions
+  const dimensions = style.dimensions as Record<string, string> | undefined;
+  if (dimensions?.minHeight) parts.push(`min-height:${dimensions.minHeight}`);
+
+  if (parts.length === 0) return '';
+  return ` style="${parts.join(';')}"`;
 }
 
 function escapeHtml(str: string): string {
