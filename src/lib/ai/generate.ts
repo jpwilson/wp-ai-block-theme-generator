@@ -3,6 +3,7 @@ import { getSystemPrompt } from './prompts/system';
 import { buildThemePrompt, buildIterationPrompt, ThemeInput } from './prompts/theme';
 import { validateAIResponse, ValidationResult } from '@/lib/validator';
 import { logToolCall, ToolCall } from './tool-tracker';
+import { createGenerationTrace, logGenerationToLangfuse, flushLangfuse } from './langfuse';
 
 export interface GenerateThemeResult {
   validation: ValidationResult;
@@ -23,6 +24,17 @@ export async function generateTheme(
   const systemPrompt = getSystemPrompt();
   const userPrompt = buildThemePrompt(input);
   const toolCalls: ToolCall[] = [];
+
+  // Langfuse tracing
+  const trace = createGenerationTrace({
+    description: input.description,
+    siteType: input.siteType,
+    industry: input.industry,
+    style: input.style,
+    colorMood: input.colorMood,
+    provider: config.provider,
+    model: config.model || 'default',
+  });
 
   let lastValidation: ValidationResult | null = null;
   let rawResponse: string | undefined;
@@ -122,7 +134,26 @@ export async function generateTheme(
       });
       toolCalls.push(call);
 
+      // Log to Langfuse
+      logGenerationToLangfuse(trace, {
+        name: `generation-attempt-${attempt}`,
+        provider: config.provider,
+        model: result.model,
+        systemPrompt,
+        userPrompt: retryUserPrompt,
+        response: rawResponse,
+        tokensIn: result.tokensIn,
+        tokensOut: result.tokensOut,
+        latencyMs,
+        success: lastValidation.valid,
+        error: lastValidation.valid ? undefined : lastValidation.errors.map(e => e.message).join('; '),
+      });
+
       if (lastValidation.valid) {
+        if (trace) {
+          trace.update({ output: { themeName: lastValidation.data?.themeName, success: true } });
+        }
+        await flushLangfuse();
         return { validation: lastValidation, toolCalls, rawResponse };
       }
     } catch (error) {
@@ -150,6 +181,11 @@ export async function generateTheme(
       };
     }
   }
+
+  if (trace) {
+    trace.update({ output: { success: false, errors: lastValidation?.errors } });
+  }
+  await flushLangfuse();
 
   return {
     validation: lastValidation || { valid: false, errors: [{ layer: 'schema', message: 'Unknown error' }] },
