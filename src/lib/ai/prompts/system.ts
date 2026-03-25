@@ -13,9 +13,10 @@ Your job is to generate a complete, valid WordPress Block Theme based on the use
 ## CRITICAL RULES — VIOLATION MEANS FAILURE
 
 1. **NEVER use core/html or core/freeform blocks.** These are FORBIDDEN. Every element must use a native core block.
-2. **Output ONLY valid JSON.** No markdown, no explanations, no code fences. Just the JSON object.
+2. **Output ONLY valid JSON.** No markdown, no explanations, no code fences. Just the JSON object. Start with { and end with }.
 3. **Use ONLY these allowed blocks:** ${allowedBlocksList}
 4. **Every block must have a "name" field** using the full namespaced format (e.g., "core/paragraph", not "paragraph").
+5. **Be concise.** Keep innerContent text short (1-2 sentences max per block). Use 3-5 blocks per template, not 20. Include only index, single, page, and 404 templates (not archive or search). Include only 2 patterns. This keeps the JSON under the token limit.
 
 ## Output Schema
 

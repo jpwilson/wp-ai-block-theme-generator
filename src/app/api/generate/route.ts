@@ -23,6 +23,7 @@ export async function POST(request: Request) {
 
     // Resolve API key: user-provided takes priority, then env var
     const resolvedKey = apiKey || getEnvKey(provider);
+    console.log(`[API] Provider: ${provider}, Model: ${model}, Has user key: ${!!apiKey}, Has env key: ${!!getEnvKey(provider)}, Resolved key: ${resolvedKey ? resolvedKey.slice(0, 10) + '...' : 'NONE'}`);
     if (!resolvedKey) {
       return Response.json(
         { error: `No API key provided for ${provider}. Please enter your API key.` },
