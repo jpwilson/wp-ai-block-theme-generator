@@ -3,7 +3,7 @@ import { getSystemPrompt } from './prompts/system';
 import { buildThemePrompt, buildIterationPrompt, ThemeInput } from './prompts/theme';
 import { validateAIResponse, ValidationResult } from '@/lib/validator';
 import { logToolCall, ToolCall } from './tool-tracker';
-import { createGenerationTrace, logGenerationToLangfuse, flushLangfuse } from './langfuse';
+import { createGenerationTrace, logGenerationToLangfuse, logRepairGenerationToLangfuse, flushLangfuse } from './langfuse';
 
 export interface GenerateThemeResult {
   validation: ValidationResult;
@@ -69,8 +69,13 @@ export async function generateTheme(
 
         // Attempt JSON repair with a fast, cheap model
         console.log('[AI] Attempting JSON repair with fast model...');
+        const repairStart = Date.now();
+        const repairModel = getRepairModel(config.provider);
+        const repairSystemPrompt = `You are a JSON repair tool. The user will give you broken or truncated JSON. Fix it and return ONLY the valid JSON. Do not explain anything. If the JSON is truncated, close all open brackets/braces/arrays to make it valid. Remove any non-JSON text before or after the JSON object.`;
+        const repairUserPrompt = `Fix this broken JSON and return ONLY the repaired JSON object:\n\n${result.content.slice(0, 12000)}`;
         try {
           const repaired = await repairJson(config, result.content);
+          const repairLatencyMs = Date.now() - repairStart;
           if (repaired) {
             const repairedStr = extractJson(repaired);
             parsed = JSON.parse(repairedStr);
@@ -78,17 +83,42 @@ export async function generateTheme(
 
             const repairCall = logToolCall({
               provider: config.provider,
-              model: 'repair-model',
+              model: repairModel,
               tokensIn: 0,
               tokensOut: 0,
-              latencyMs: Date.now() - start - latencyMs,
+              latencyMs: repairLatencyMs,
               success: true,
               retryCount: attempt,
             });
             toolCalls.push(repairCall);
+
+            logRepairGenerationToLangfuse(trace, {
+              provider: config.provider,
+              model: repairModel,
+              systemPrompt: repairSystemPrompt,
+              userPrompt: repairUserPrompt,
+              response: repaired,
+              tokensIn: 0,
+              tokensOut: 0,
+              latencyMs: repairLatencyMs,
+              success: true,
+            });
           }
         } catch (repairError) {
+          const repairLatencyMs = Date.now() - repairStart;
           console.error('[AI] JSON repair also failed:', (repairError as Error).message);
+
+          logRepairGenerationToLangfuse(trace, {
+            provider: config.provider,
+            model: repairModel,
+            systemPrompt: repairSystemPrompt,
+            userPrompt: repairUserPrompt,
+            tokensIn: 0,
+            tokensOut: 0,
+            latencyMs: repairLatencyMs,
+            success: false,
+            error: (repairError as Error).message,
+          });
         }
 
         if (!parsed) {
@@ -147,11 +177,36 @@ export async function generateTheme(
         latencyMs,
         success: lastValidation.valid,
         error: lastValidation.valid ? undefined : lastValidation.errors.map(e => e.message).join('; '),
+        validationErrors: lastValidation.valid ? undefined : lastValidation.errors,
       });
 
       if (lastValidation.valid) {
         if (trace) {
-          trace.update({ output: { themeName: lastValidation.data?.themeName, success: true } });
+          const data = lastValidation.data;
+          const generatedFiles: string[] = [];
+          if (data?.templates) {
+            for (const t of data.templates) {
+              generatedFiles.push(`templates/${t.name}.html`);
+            }
+          }
+          if (data?.templateParts) {
+            for (const p of data.templateParts) {
+              generatedFiles.push(`parts/${p.name}.html`);
+            }
+          }
+          if (data?.patterns) {
+            for (const p of data.patterns) {
+              generatedFiles.push(`patterns/${p.name}.php`);
+            }
+          }
+          generatedFiles.push('theme.json');
+          trace.update({
+            output: {
+              themeName: data?.themeName,
+              success: true,
+              generatedFiles,
+            },
+          });
         }
         await flushLangfuse();
         return { validation: lastValidation, toolCalls, rawResponse };

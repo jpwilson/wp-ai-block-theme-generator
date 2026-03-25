@@ -59,6 +59,7 @@ export function createGenerationTrace(input: {
 
 /**
  * Log an AI generation call to Langfuse.
+ * Logs the full system prompt, user prompt, and response without truncation.
  */
 export function logGenerationToLangfuse(
   trace: ReturnType<typeof createGenerationTrace>,
@@ -74,6 +75,7 @@ export function logGenerationToLangfuse(
     latencyMs: number;
     success: boolean;
     error?: string;
+    validationErrors?: Array<{ layer: string; message: string; path?: string }>;
   },
 ) {
   if (!trace) return;
@@ -83,10 +85,65 @@ export function logGenerationToLangfuse(
     model: params.model,
     modelParameters: { provider: params.provider },
     input: [
-      { role: 'system', content: params.systemPrompt.slice(0, 1000) + '...' },
+      { role: 'system', content: params.systemPrompt },
       { role: 'user', content: params.userPrompt },
     ],
-    output: params.response ? params.response.slice(0, 2000) + '...' : undefined,
+    output: params.response ?? undefined,
+    usage: {
+      input: params.tokensIn,
+      output: params.tokensOut,
+    },
+    metadata: {
+      latencyMs: params.latencyMs,
+      success: params.success,
+      error: params.error,
+      ...(params.validationErrors && params.validationErrors.length > 0
+        ? { validationErrors: params.validationErrors }
+        : {}),
+    },
+    level: params.success ? 'DEFAULT' : 'ERROR',
+    statusMessage: params.success ? 'OK' : params.error,
+  });
+
+  // Add a validation score to the trace
+  trace.score({
+    name: 'validation-passed',
+    value: params.success ? 1.0 : 0.0,
+    comment: params.success
+      ? 'Validation passed'
+      : params.error || 'Validation failed',
+  });
+}
+
+/**
+ * Log a JSON repair generation attempt to Langfuse.
+ */
+export function logRepairGenerationToLangfuse(
+  trace: ReturnType<typeof createGenerationTrace>,
+  params: {
+    provider: string;
+    model: string;
+    systemPrompt: string;
+    userPrompt: string;
+    response?: string;
+    tokensIn: number;
+    tokensOut: number;
+    latencyMs: number;
+    success: boolean;
+    error?: string;
+  },
+) {
+  if (!trace) return;
+
+  trace.generation({
+    name: 'json-repair',
+    model: params.model,
+    modelParameters: { provider: params.provider },
+    input: [
+      { role: 'system', content: params.systemPrompt },
+      { role: 'user', content: params.userPrompt },
+    ],
+    output: params.response ?? undefined,
     usage: {
       input: params.tokensIn,
       output: params.tokensOut,
@@ -97,7 +154,7 @@ export function logGenerationToLangfuse(
       error: params.error,
     },
     level: params.success ? 'DEFAULT' : 'ERROR',
-    statusMessage: params.success ? 'OK' : params.error,
+    statusMessage: params.success ? 'JSON repair succeeded' : params.error || 'JSON repair failed',
   });
 }
 
