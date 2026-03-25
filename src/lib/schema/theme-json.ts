@@ -93,33 +93,42 @@ const settingsSchema = z.object({
   }).optional(),
 }).passthrough();
 
+/** Accept string or number — AI often sends lineHeight as 1.2 instead of "1.2" */
+const stringOrNumber = z.union([z.string(), z.number()]).transform(v => String(v));
+
+/** Accept string, record, or number for padding/margin — AI sends inconsistent types */
+const spacingValue = z.union([
+  z.record(z.string(), z.union([z.string(), z.number()]).transform(v => String(v))),
+  z.string(),
+]).optional();
+
 const spacingStyleSchema = z.object({
-  padding: z.record(z.string(), z.string()).optional(),
-  margin: z.record(z.string(), z.string()).optional(),
-  blockGap: z.string().optional(),
-}).optional();
+  padding: spacingValue,
+  margin: spacingValue,
+  blockGap: stringOrNumber.optional(),
+}).passthrough().optional();
 
 const typographyStyleSchema = z.object({
   fontFamily: z.string().optional(),
-  fontSize: z.string().optional(),
-  fontWeight: z.string().optional(),
-  lineHeight: z.string().optional(),
-  letterSpacing: z.string().optional(),
+  fontSize: stringOrNumber.optional(),
+  fontWeight: stringOrNumber.optional(),
+  lineHeight: stringOrNumber.optional(),
+  letterSpacing: stringOrNumber.optional(),
   textTransform: z.string().optional(),
-}).optional();
+}).passthrough().optional();
 
 const colorStyleSchema = z.object({
   background: z.string().optional(),
   text: z.string().optional(),
   gradient: z.string().optional(),
-}).optional();
+}).passthrough().optional();
 
 const borderStyleSchema = z.object({
   color: z.string().optional(),
-  radius: z.string().optional(),
+  radius: stringOrNumber.optional(),
   style: z.string().optional(),
-  width: z.string().optional(),
-}).optional();
+  width: stringOrNumber.optional(),
+}).passthrough().optional();
 
 const elementStyleSchema = z.object({
   color: colorStyleSchema,
