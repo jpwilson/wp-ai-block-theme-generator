@@ -94,8 +94,8 @@ const PROVIDER_MODELS: Record<ProviderName, ModelOption[]> = {
     { id: 'deepseek/deepseek-chat', label: 'DeepSeek V3', group: 'DeepSeek' },
   ],
   anthropic: [
-    { id: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
-    { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
+    { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4 (recommended)' },
+    { id: 'claude-opus-4-20250514', label: 'Claude Opus 4 (slow)' },
     { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (fast)' },
     { id: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
   ],
