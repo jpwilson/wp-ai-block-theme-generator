@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Outer blue ring -->
+  <circle cx="32" cy="32" r="30" stroke="#1a9fd4" stroke-width="5" fill="white"/>
+  <!-- Forward slash -->
+  <line x1="24" y1="44" x2="40" y2="20" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/>
+</svg>

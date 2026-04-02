@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "WP Block Theme Generator",
   description: "AI-powered WordPress Block Theme generator. Create complete, valid block themes from natural language descriptions.",
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

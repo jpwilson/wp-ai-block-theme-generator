@@ -1,11 +1,12 @@
-import { generateTheme } from '@/lib/ai/generate';
+import { generateTheme, refineThemeWithPasses } from '@/lib/ai/generate';
 import { enhanceTheme } from '@/lib/enhancer';
 import { assembleTheme } from '@/lib/assembler';
 import { packageThemeBuffer } from '@/lib/packager';
 import { ProviderConfig } from '@/lib/ai/providers';
 
-// Allow up to 120 seconds for AI generation (Opus can be slow)
-export const maxDuration = 120;
+// Allow up to 300 seconds: initial generation (~90s) + 3 Opus refinement passes (~60s each)
+// Vercel Pro supports up to 300s. For local dev there is no timeout.
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   try {
@@ -64,8 +65,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // Run 3 AI refinement passes: structure → design → polish
+    const { data: refined, toolCalls: refineCalls } = await refineThemeWithPasses(config, result.validation.data);
+    const allToolCalls = [...result.toolCalls, ...refineCalls];
+
     // Enhance: apply deterministic design best practices
-    const enhanced = enhanceTheme(result.validation.data);
+    const enhanced = enhanceTheme(refined);
 
     // Generate theme slug from name
     const slug = enhanced.themeName
@@ -87,7 +92,7 @@ export async function POST(request: Request) {
       themeName: enhanced.themeName,
       files: files.map(f => ({ path: f.path, content: f.content })),
       zip: Buffer.from(zipBuffer).toString('base64'),
-      toolCalls: result.toolCalls,
+      toolCalls: allToolCalls,
       themeData: enhanced,
     });
   } catch (error) {

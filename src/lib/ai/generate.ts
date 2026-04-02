@@ -2,6 +2,7 @@ import { ProviderConfig, callProvider } from './providers';
 import { getSystemPrompt, PromptSize } from './prompts/system';
 import { buildThemePrompt, buildIterationPrompt, ThemeInput } from './prompts/theme';
 import { validateAIResponse, ValidationResult } from '@/lib/validator';
+import { AIResponse } from '@/lib/schema';
 import { logToolCall, ToolCall } from './tool-tracker';
 import { createGenerationTrace, logGenerationToLangfuse, logRepairGenerationToLangfuse, flushLangfuse } from './langfuse';
 
@@ -363,6 +364,137 @@ async function repairJson(
     return null;
   }
 }
+
+// ─── 3-Pass Refinement ────────────────────────────────────────────────────────
+
+interface RefinementPass {
+  name: string;
+  focus: string;
+}
+
+const REFINEMENT_PASSES: RefinementPass[] = [
+  {
+    name: 'content',
+    focus: `Fix all missing or empty content — this is the most critical pass:
+1. Find every core/cover block. If it has no innerBlocks, add: core/group (layout:constrained) containing core/heading (level:1, with real headline text, textColor:"white") + core/paragraph (real subheadline, textColor:"white") + core/buttons → core/button (real CTA text, backgroundColor:"primary").
+2. Find every core/heading where content is "" or missing — fill it with a real, relevant headline.
+3. Find every core/paragraph where content is "" or missing — fill it with 2-3 real sentences.
+4. Find every section (core/group) that contains ONLY images/galleries with no text — add a heading + paragraph above the images.
+5. Find every core/image with an empty url — replace with a real Unsplash URL appropriate to the theme industry (?w=800&q=80).
+6. Find every core/button with text "" or "Button" — replace with a specific CTA like "Explore Our Menu", "View Our Work", "Get In Touch", etc.
+7. NEVER add core/html or core/freeform. Return the COMPLETE improved JSON.`,
+  },
+  {
+    name: 'design',
+    focus: `Improve visual design — every section must look distinct and polished:
+1. Every core/cover: ensure dimRatio is 50-60, minHeight is 80+ (vh), overlayColor is set to a dark palette slug, and all inner text has textColor:"white".
+2. Every top-level core/group section: set backgroundColor to a palette slug and add style.spacing.padding top+bottom "var:preset|spacing|70". Alternate: light section → dark section → light section.
+3. core/columns in features sections: each column should have style.spacing.padding "2rem", style.border.radius "12px", and style.color.background "#ffffff" if on a coloured parent.
+4. All core/button blocks: backgroundColor from palette, textColor white, style.border.radius "6px", style.spacing.padding top/bottom "0.875rem" left/right "2rem".
+5. Header group: layout type:flex, justifyContent:space-between, verticalAlignment:center, padding 1.25rem top/bottom.
+6. Footer group: backgroundColor set to foreground palette slug, textColor to background.`,
+  },
+  {
+    name: 'polish',
+    focus: `Final cohesion and polish pass:
+1. Replace ANY remaining Lorem ipsum or generic text with copy specific to this theme's industry and description.
+2. Ensure the header template part has: core/site-logo + core/navigation with 4-5 core/navigation-link blocks with real labels and URLs.
+3. Ensure the footer template part has 3 columns: (1) site-logo + tagline paragraph, (2) navigation links, (3) social links + copyright paragraph.
+4. Verify all Unsplash URLs: heroes use ?w=1920&q=80, cards/thumbnails use ?w=800&q=80, backgrounds use ?w=1600&q=80.
+5. Make headings specific and compelling — not generic ("Our Services" → "Handcrafted Italian Dishes Made Daily").
+6. Ensure button CTAs are specific and action-oriented ("Read More" → "Explore Our Full Menu").
+7. Return the complete polished JSON.`,
+  },
+];
+
+const REFINEMENT_SYSTEM_PROMPT = `WordPress Block Theme JSON expert. You are refining an existing theme JSON.
+ABSOLUTE RULES:
+1. NEVER add core/html or core/freeform — they are forbidden.
+2. Output ONLY the complete valid JSON object. Start with { end with }. No markdown, no explanation.
+3. Keep ALL existing fields. Improve content within them — do not remove blocks or sections.
+4. Every core/heading MUST have non-empty "content". Every core/paragraph MUST have non-empty "content".`;
+
+/**
+ * Run 3 sequential AI refinement passes over a validated AIResponse.
+ * Each pass uses a fast model and focuses on a specific quality dimension.
+ * If a pass produces invalid JSON or fails validation the previous version is kept.
+ */
+export async function refineThemeWithPasses(
+  config: ProviderConfig,
+  data: AIResponse,
+): Promise<{ data: AIResponse; toolCalls: ToolCall[] }> {
+  const toolCalls: ToolCall[] = [];
+  let current = data;
+
+  // Use the same model the user chose — refinement quality matters as much as initial generation
+  const refineConfig: ProviderConfig = { ...config };
+
+  for (const pass of REFINEMENT_PASSES) {
+    const currentJson = JSON.stringify(current, null, 2);
+    const userPrompt = `Here is the current WordPress block theme JSON:\n\n${currentJson}\n\nIMPROVEMENT FOCUS — ${pass.name.toUpperCase()} PASS:\n${pass.focus}\n\nReturn ONLY the complete improved JSON object with ALL fields intact.`;
+
+    const start = Date.now();
+    try {
+      const result = await callProvider(refineConfig, REFINEMENT_SYSTEM_PROMPT, userPrompt);
+      const latencyMs = Date.now() - start;
+
+      let parsed: unknown;
+      try {
+        const jsonStr = extractJson(result.content);
+        parsed = JSON.parse(jsonStr);
+      } catch {
+        console.log(`[Refine:${pass.name}] Invalid JSON returned — keeping previous version`);
+        toolCalls.push(logToolCall({
+          provider: refineConfig.provider,
+          model: result.model,
+          tokensIn: result.tokensIn,
+          tokensOut: result.tokensOut,
+          latencyMs,
+          success: false,
+          error: `Refinement pass "${pass.name}" returned invalid JSON`,
+          retryCount: 0,
+        }));
+        continue;
+      }
+
+      const validation = validateAIResponse(parsed);
+      toolCalls.push(logToolCall({
+        provider: refineConfig.provider,
+        model: result.model,
+        tokensIn: result.tokensIn,
+        tokensOut: result.tokensOut,
+        latencyMs,
+        success: validation.valid,
+        error: validation.valid ? undefined : `Refinement pass "${pass.name}" failed validation`,
+        retryCount: 0,
+      }));
+
+      if (validation.valid && validation.data) {
+        console.log(`[Refine:${pass.name}] ✓ succeeded (${latencyMs}ms)`);
+        current = validation.data;
+      } else {
+        console.log(`[Refine:${pass.name}] ✗ failed validation — keeping previous version`);
+      }
+    } catch (e) {
+      const latencyMs = Date.now() - start;
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error(`[Refine:${pass.name}] Error:`, msg);
+      toolCalls.push(logToolCall({
+        provider: refineConfig.provider,
+        model: refineConfig.model || 'unknown',
+        tokensIn: 0,
+        tokensOut: 0,
+        latencyMs,
+        success: false,
+        error: `Refinement pass "${pass.name}" error: ${msg}`,
+        retryCount: 0,
+      }));
+    }
+  }
+
+  return { data: current, toolCalls };
+}
+
 
 function getRepairModel(provider: string): string {
   switch (provider) {
