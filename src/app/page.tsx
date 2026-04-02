@@ -128,7 +128,7 @@ const PROVIDER_MODELS: Record<ProviderName, ModelOption[]> = {
 };
 
 const DEFAULT_MODELS: Record<ProviderName, string> = {
-  openrouter: 'anthropic/claude-sonnet-4.6',  // Sonnet fits Vercel Hobby 60s limit; switch to Opus on Pro
+  openrouter: 'anthropic/claude-opus-4.6',  // Opus locally (no timeout); Vercel Hobby gets Sonnet via server default
   anthropic: 'claude-sonnet-4-20250514',
   openai: 'gpt-4.1',
   grok: 'grok-3',
