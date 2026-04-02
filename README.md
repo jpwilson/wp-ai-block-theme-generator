@@ -21,7 +21,15 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), select your AI provider, enter your API key, and start generating themes.
+Open [http://localhost:3333](http://localhost:3333), select your AI provider, enter your API key, and start generating themes.
+
+> **This is primarily a local-first tool.** AI generation runs 4 Claude Opus calls in sequence (~2–5 minutes total). There is no timeout locally. The Railway deployment at the URL below pre-configures an OpenRouter key so others can try it without an API key.
+
+### Deployed Demo
+
+**[https://wp-block-theme-generator-production.up.railway.app](https://wp-block-theme-generator-production.up.railway.app)**
+
+Hosted on Railway (persistent Node.js server — no serverless timeout limits). The server-configured OpenRouter key is pre-loaded so "Use server-configured key" works out of the box.
 
 ### Run Tests
 
@@ -116,8 +124,13 @@ See **[What I'd Do Next](docs/what-id-do-next.md)** for future improvements incl
 | UI | React + shadcn/ui + Tailwind CSS |
 | CI | GitHub Actions (lint + typecheck + test) |
 | Preview | WordPress Playground (WASM) |
+| Hosting | Railway (persistent Node.js — no serverless timeout) |
 
-Provider switching is a runtime UI choice — no code changes needed. Deployed version uses a pre-configured OpenRouter key; local users enter their own key for any provider.
+Provider switching is a runtime UI choice — no code changes needed. The Railway deployment uses a pre-configured OpenRouter key; local users enter their own key for any provider.
+
+### Why Railway, not Vercel
+
+The generation pipeline makes 4 sequential Claude Opus API calls (1 initial + 3 refinement passes). Total wall-clock time is 2–5 minutes. Vercel's serverless functions have a 10-second limit on the Hobby plan and 300 seconds on Pro — neither is reliable for long-running AI workloads. Railway runs a persistent Node.js process with no function timeout, making it the right platform for this use case.
 
 ---
 
