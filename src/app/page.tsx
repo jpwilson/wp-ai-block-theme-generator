@@ -238,7 +238,7 @@ const DEMO_DESCRIPTIONS = [
 
 export default function Home() {
   // Provider state
-  const [provider, setProvider] = useState<ProviderName>('anthropic');
+  const [provider, setProvider] = useState<ProviderName>('openrouter');
   const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState('');
   const [customBaseUrl, setCustomBaseUrl] = useState('');
