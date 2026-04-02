@@ -330,13 +330,8 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok) {
-        let errorMsg = data.error || 'Generation failed';
-        if (data.errors?.length) {
-          errorMsg += '\n\nDetails:\n' + data.errors.map((e: { layer: string; message: string; path?: string }) =>
-            `[${e.layer}] ${e.message}${e.path ? ` (at ${e.path})` : ''}`
-          ).join('\n');
-        }
-        setError(errorMsg);
+        // Show a friendly message — raw validation errors are not for end users
+        setError('Generation failed. Try again, or try a simpler Prompt Detail setting.');
         if (data.toolCalls) setToolCalls(data.toolCalls);
         return;
       }
@@ -377,7 +372,8 @@ export default function Home() {
         localStorage.setItem('wp-theme-gen-provider', provider);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Network error');
+      // Don't expose raw technical errors — show a friendly retry message
+      setError('Something went wrong. Please try again.');
     } finally {
       setGenerating(false);
     }
@@ -769,65 +765,6 @@ export default function Home() {
             </section>
           )}
 
-          {/* AI Stats + Prompt */}
-          <section className="bg-[#F2F3FF] rounded-xl border border-[#BFC7D1]/30 overflow-hidden">
-            <Tabs defaultValue="prompt" className="w-full">
-              <TabsList className="w-full justify-start rounded-none border-b border-[#BFC7D1]/40 bg-transparent px-6 gap-4 h-12">
-                <TabsTrigger value="prompt" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary text-[10px] font-bold uppercase tracking-widest px-0 h-12 bg-transparent">System Prompt</TabsTrigger>
-                <TabsTrigger value="stats" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary text-[10px] font-bold uppercase tracking-widest px-0 h-12 bg-transparent">AI Stats</TabsTrigger>
-              </TabsList>
-              <TabsContent value="prompt" className="m-0 p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#404850]/60">Active prompt · updates live</p>
-                  <Badge variant="secondary" className="text-[10px]">{promptSize}</Badge>
-                </div>
-                <ScrollArea className="h-[220px]">
-                  <pre className="text-xs font-mono whitespace-pre-wrap bg-white p-4 rounded-xl border border-[#BFC7D1]/40 leading-relaxed text-[#131B2E]">
-                    {getSystemPromptPreview(promptSize)}
-                  </pre>
-                </ScrollArea>
-              </TabsContent>
-              <TabsContent value="stats" className="m-0 p-6">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#404850]/60 mb-4">1 generation + 3 refinement passes per theme</p>
-                {toolCalls.length === 0 ? (
-                  <p className="text-sm text-[#404850]/50 italic">Generate a theme to see AI call details.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {toolCalls.map((call, i) => (
-                      <div key={i} className="border border-[#BFC7D1]/40 rounded-lg p-3 text-sm bg-white">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Badge variant={call.success ? 'default' : 'destructive'} className="text-[10px]">{call.success ? 'OK' : 'Failed'}</Badge>
-                            <span className="font-mono text-xs text-[#404850] truncate max-w-[160px]">{call.model}</span>
-                          </div>
-                          <div className="flex gap-3 text-xs text-[#404850]/60">
-                            <span>${estimateCost(call.model, call.tokensIn, call.tokensOut).toFixed(4)}</span>
-                            <span>{(call.latencyMs / 1000).toFixed(1)}s</span>
-                          </div>
-                        </div>
-                        {call.error && <p className="text-xs text-destructive mt-1">{call.error}</p>}
-                      </div>
-                    ))}
-                    <Separator />
-                    <div className="grid grid-cols-4 gap-3 text-center pt-2">
-                      {[
-                        [toolCalls.length, 'Calls'],
-                        [(toolCalls.reduce((s,c)=>s+c.tokensIn+c.tokensOut,0)/1000).toFixed(1)+'k', 'Tokens'],
-                        [toolCalls.length > 0 ? (toolCalls.reduce((s,c)=>s+c.latencyMs,0)/toolCalls.length/1000).toFixed(1)+'s' : '0s', 'Avg'],
-                        ['$'+toolCalls.reduce((s,c)=>s+estimateCost(c.model,c.tokensIn,c.tokensOut),0).toFixed(3), 'Cost'],
-                      ].map(([val, lbl]) => (
-                        <div key={String(lbl)}>
-                          <p className="text-lg font-bold text-[#131B2E]">{val}</p>
-                          <p className="text-[9px] font-bold uppercase tracking-wider text-[#404850]/60">{lbl}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </section>
-
           {/* Theme Library */}
           <div id="library-section">
             <ThemeLibrary
@@ -845,46 +782,31 @@ export default function Home() {
       {/* ─── Right Panel (desktop) ─── */}
       <aside className="hidden lg:flex fixed right-0 top-0 w-[360px] h-screen flex-col bg-[#F2F3FF] border-l border-[#BFC7D1]/60 z-40">
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-[#404850]/60">Technical Summary</p>
 
-          {/* Terminal — shows the real 4-pass pipeline */}
-          <TerminalProgress generating={generating} files={files} />
-
-          {/* Status card */}
-          <div className="bg-white rounded-xl p-5 border border-[#BFC7D1]/40 space-y-3">
-            <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center justify-between">
-              Generator Status
-              <span className={`w-2 h-2 rounded-full ${generating ? 'bg-amber-400 animate-pulse' : files.length ? 'bg-emerald-400' : 'bg-[#BFC7D1]'}`} />
-            </h4>
-            {[
-              { label: 'Block schema validation active', done: true },
-              { label: 'Zero Custom HTML filter active', done: true },
-              { label: files.length > 0 ? `${files.length} files generated successfully` : generating ? 'Generation in progress...' : 'Awaiting generation command', done: !!files.length, active: generating },
-            ].map((item, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <CheckCircle className={`w-4 h-4 shrink-0 mt-0.5 ${item.done ? 'text-[#006a48]' : item.active ? 'text-amber-500' : 'text-[#BFC7D1]'}`} />
-                <p className={`text-xs font-medium leading-tight ${item.done || item.active ? 'text-[#404850]' : 'text-[#404850]/40'}`}>{item.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Error */}
+          {/* Error — friendly, not raw technical output */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
-              {error}
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-sm font-semibold text-red-700 mb-1">Generation failed</p>
+              <p className="text-xs text-red-600 leading-relaxed">
+                The AI returned an unexpected response. This sometimes happens with complex prompts — try again, or switch to a simpler Prompt Detail setting.
+              </p>
             </div>
           )}
 
-          {/* Output */}
+          {/* Output — theme preview + download */}
           {files.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-bold text-[#131B2E]">{themeName}</p>
-                  <p className="text-xs text-[#404850]/60">{files.length} files generated</p>
+                  <p className="font-bold text-[#131B2E] text-base">{themeName}</p>
+                  <p className="text-xs text-[#404850]/60">
+                    {files.filter(f => f.path.startsWith('templates')).length} templates ·{' '}
+                    {files.filter(f => f.path.startsWith('parts')).length} parts ·{' '}
+                    {files.filter(f => f.path.startsWith('patterns')).length} patterns
+                  </p>
                 </div>
-                <Button onClick={handleDownload} size="sm" className="bg-primary text-white hover:bg-primary/90 text-xs">
-                  Download ZIP
+                <Button onClick={handleDownload} className="bg-primary text-white hover:bg-primary/90 text-sm font-semibold px-4">
+                  Download
                 </Button>
               </div>
               <div className="bg-white rounded-xl border border-[#BFC7D1]/40 overflow-hidden">
@@ -929,18 +851,28 @@ export default function Home() {
             </div>
           )}
 
-          {!files.length && !generating && (
-            <div className="bg-white rounded-xl border border-dashed border-[#BFC7D1] p-8 text-center">
-              <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center mx-auto mb-4">
-                <LayoutGrid className="w-6 h-6 text-primary" />
+          {/* Empty state */}
+          {!files.length && !generating && !error && (
+            <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center px-4">
+              <div className="w-16 h-16 rounded-2xl bg-primary/8 border border-primary/15 flex items-center justify-center mx-auto mb-5">
+                <Rocket className="w-7 h-7 text-primary" />
               </div>
-              <p className="text-sm font-bold text-[#131B2E] mb-1">No theme generated yet</p>
-              <p className="text-xs text-[#404850]/60 leading-relaxed max-w-[240px] mx-auto">
-                Describe your site, fill in the details, then click Generate below.
+              <p className="text-base font-bold text-[#131B2E] mb-2">Ready to generate</p>
+              <p className="text-sm text-[#404850]/60 leading-relaxed max-w-[220px]">
+                Fill in your theme description on the left and click Generate Theme.
               </p>
+              <div className="mt-6 space-y-2 text-left w-full max-w-[240px]">
+                {['Native WordPress core blocks only', 'Full Site Editing compatible', 'Installs in one click'].map(item => (
+                  <div key={item} className="flex items-center gap-2">
+                    <CheckCircle className="w-3.5 h-3.5 text-[#006a48] shrink-0" />
+                    <span className="text-xs text-[#404850]">{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
+          {/* Generating state */}
           {generating && (
             <div className="bg-white rounded-xl border border-[#BFC7D1]/40 p-6">
               <GenerationProgress />
