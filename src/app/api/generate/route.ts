@@ -4,10 +4,9 @@ import { assembleTheme } from '@/lib/assembler';
 import { packageThemeBuffer } from '@/lib/packager';
 import { ProviderConfig } from '@/lib/ai/providers';
 
-// 58s budget: fits Vercel Hobby (60s limit).
-// With Sonnet 4.6: ~25s initial + 1 refinement pass ~20s = ~45s total.
-// For full Opus quality with 3 passes, upgrade to Vercel Pro (300s limit).
-export const maxDuration = 58;
+// Railway: no timeout limit — full pipeline runs freely.
+// Vercel Hobby: 10s limit (504s). Vercel Pro: 300s limit.
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   try {
