@@ -847,30 +847,8 @@ export default function Home() {
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           <p className="text-[10px] font-bold uppercase tracking-widest text-[#404850]/60">Technical Summary</p>
 
-          {/* Terminal block */}
-          <div className="rounded-xl bg-[#131B2E] p-5 font-mono text-[0.68rem] leading-relaxed shadow-xl">
-            <div className="flex justify-between border-b border-white/10 pb-2 mb-3">
-              <span className="text-white/40">ENGINE_MODE</span>
-              <span className="text-emerald-400 font-bold">CORE_BLOCKS_ONLY</span>
-            </div>
-            <div className="space-y-1.5">
-              <p><span className="text-white/30">01 </span><span className="text-[#92ccff]">SCANNING WP_CORE_SCHEMA...</span></p>
-              <p><span className="text-white/30">02 </span><span className="text-[#92ccff]">VALIDATING BLOCK_JSON v3...</span></p>
-              <p><span className="text-white/30">03 </span><span className="text-[#92ccff]">BYPASSING CUSTOM_HTML...</span></p>
-              <p><span className="text-white/30">04 </span>
-                <span className={generating ? 'text-amber-400 animate-pulse' : files.length ? 'text-emerald-400' : 'text-white/40'}>
-                  {generating ? 'GENERATING...' : files.length ? `COMPLETE — ${files.length} FILES` : 'READY_FOR_GENERATION'}
-                </span>
-              </p>
-            </div>
-            {files.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-white/10 space-y-1 text-white/50">
-                <p className="text-white/30">{'// Output:'}</p>
-                <p>— theme.json v3 · settings · styles</p>
-                <p>— {files.filter(f => f.path.startsWith('templates')).length} templates · {files.filter(f => f.path.startsWith('parts')).length} parts · {files.filter(f => f.path.startsWith('patterns')).length} patterns</p>
-              </div>
-            )}
-          </div>
+          {/* Terminal — shows the real 4-pass pipeline */}
+          <TerminalProgress generating={generating} files={files} />
 
           {/* Status card */}
           <div className="bg-white rounded-xl p-5 border border-[#BFC7D1]/40 space-y-3">
@@ -1114,6 +1092,114 @@ function GenerationProgress() {
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2">Did you know?</p>
           <p className="text-sm font-medium leading-snug">{fact.title}</p>
           <p className="text-xs leading-relaxed text-muted-foreground mt-1">{fact.text}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Real pipeline progress terminal ──────────────────────────────────────────
+//
+// The actual generation process is 4 sequential AI calls:
+//   Pass 1  Initial generation    ~0–90s
+//   Pass 2  Refine: Content       ~90–160s
+//   Pass 3  Refine: Design        ~160–220s
+//   Pass 4  Refine: Polish        ~220–280s
+//
+// The terminal shows which pass is currently running based on elapsed time,
+// then shows a completed output summary when done.
+
+const PIPELINE_STEPS = [
+  { label: 'INITIAL_GENERATION', detail: 'Building theme.json + 6 templates + patterns', startsAt: 0,   endsAt: 90  },
+  { label: 'REFINE:CONTENT',     detail: 'Filling empty blocks, real copy, hero text',   startsAt: 90,  endsAt: 160 },
+  { label: 'REFINE:DESIGN',      detail: 'Colors, spacing, section rhythm, buttons',      startsAt: 160, endsAt: 220 },
+  { label: 'REFINE:POLISH',      detail: 'CTAs, image URLs, header/footer, consistency',  startsAt: 220, endsAt: 280 },
+];
+
+interface ThemeFile { path: string; content: string; }
+
+function TerminalProgress({ generating, files }: { generating: boolean; files: ThemeFile[] }) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (!generating) { setElapsed(0); return; }
+    const id = setInterval(() => setElapsed(e => e + 1), 1000);
+    return () => clearInterval(id);
+  }, [generating]);
+
+  const done = !generating && files.length > 0;
+
+  return (
+    <div className="rounded-xl bg-[#131B2E] p-5 font-mono text-[0.68rem] leading-relaxed shadow-xl">
+      <div className="flex justify-between border-b border-white/10 pb-2 mb-4">
+        <span className="text-white/40">ENGINE_MODE</span>
+        <span className="text-emerald-400 font-bold">CORE_BLOCKS_ONLY</span>
+      </div>
+
+      {/* Idle state */}
+      {!generating && !done && (
+        <div className="space-y-1.5">
+          <p className="text-white/40">{'// System ready. 4-pass pipeline:'}</p>
+          {PIPELINE_STEPS.map((step, i) => (
+            <p key={i}>
+              <span className="text-white/25">{String(i + 1).padStart(2, '0')} </span>
+              <span className="text-white/40">{step.label}</span>
+            </p>
+          ))}
+          <p className="text-white/25 pt-2">{'// Click Generate to begin'}</p>
+        </div>
+      )}
+
+      {/* Generating state — steps light up as time elapses */}
+      {generating && (
+        <div className="space-y-2">
+          {PIPELINE_STEPS.map((step, i) => {
+            const isActive  = elapsed >= step.startsAt && elapsed < step.endsAt;
+            const isDone    = elapsed >= step.endsAt;
+            const isPending = elapsed < step.startsAt;
+            return (
+              <div key={i}>
+                <p>
+                  <span className="text-white/25">{String(i + 1).padStart(2, '0')} </span>
+                  <span className={
+                    isDone    ? 'text-emerald-400' :
+                    isActive  ? 'text-amber-400 animate-pulse' :
+                                'text-white/25'
+                  }>
+                    {step.label}
+                    {isDone   ? ' ✓' : ''}
+                    {isActive ? '...' : ''}
+                  </span>
+                </p>
+                {isActive && (
+                  <p className="text-white/40 ml-4">{step.detail}</p>
+                )}
+              </div>
+            );
+          })}
+          <p className="text-white/30 pt-1 font-mono">{elapsed}s elapsed</p>
+        </div>
+      )}
+
+      {/* Complete state */}
+      {done && (
+        <div className="space-y-1.5">
+          {PIPELINE_STEPS.map((step, i) => (
+            <p key={i}>
+              <span className="text-white/25">{String(i + 1).padStart(2, '0')} </span>
+              <span className="text-emerald-400">{step.label} ✓</span>
+            </p>
+          ))}
+          <div className="mt-4 pt-3 border-t border-white/10 space-y-1">
+            <p className="text-white/30">{'// Output:'}</p>
+            <p className="text-white/60">— theme.json v3 · settings · global styles</p>
+            <p className="text-white/60">
+              — {files.filter(f => f.path.startsWith('templates')).length} templates
+              {' · '}{files.filter(f => f.path.startsWith('parts')).length} parts
+              {' · '}{files.filter(f => f.path.startsWith('patterns')).length} patterns
+            </p>
+            <p className="text-emerald-400 font-bold">STATUS: COMPLETE — {files.length} FILES</p>
+          </div>
         </div>
       )}
     </div>
