@@ -2,14 +2,12 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import dynamic from 'next/dynamic';
 import {
@@ -145,42 +143,6 @@ const OPTIONAL_PAGES = [
   'Careers', 'Press', 'Partners', 'Case Studies', 'Resources',
 ];
 
-/** Approximate pricing per 1M tokens by model (input, output) in USD */
-const MODEL_PRICING: Record<string, { input: number; output: number }> = {
-  // Anthropic
-  'claude-sonnet-4.6': { input: 3, output: 15 },
-  'claude-sonnet-4-6': { input: 3, output: 15 },
-  'anthropic/claude-sonnet-4.6': { input: 3, output: 15 },
-  'claude-opus-4.6': { input: 15, output: 75 },
-  'claude-opus-4-6': { input: 15, output: 75 },
-  'anthropic/claude-opus-4.6': { input: 15, output: 75 },
-  // OpenAI
-  'gpt-4.1': { input: 2, output: 8 },
-  'openai/gpt-4.1': { input: 2, output: 8 },
-  'gpt-4.1-mini': { input: 0.4, output: 1.6 },
-  'openai/gpt-4.1-mini': { input: 0.4, output: 1.6 },
-  'gpt-4o': { input: 2.5, output: 10 },
-  'openai/gpt-4o': { input: 2.5, output: 10 },
-  // Google
-  'gemini-2.5-pro': { input: 1.25, output: 10 },
-  'google/gemini-2.5-pro': { input: 1.25, output: 10 },
-  'gemini-2.5-flash': { input: 0.15, output: 0.6 },
-  'google/gemini-2.5-flash': { input: 0.15, output: 0.6 },
-};
-
-const DEFAULT_PRICING = { input: 3, output: 15 };
-
-/** Estimate cost in dollars for a single AI call */
-function estimateCost(model: string, tokensIn: number, tokensOut: number): number {
-  // Try exact match first, then partial match on known model substrings
-  let pricing = MODEL_PRICING[model];
-  if (!pricing) {
-    const lower = model.toLowerCase();
-    const key = Object.keys(MODEL_PRICING).find((k) => lower.includes(k.toLowerCase()));
-    pricing = key ? MODEL_PRICING[key] : DEFAULT_PRICING;
-  }
-  return (tokensIn * pricing.input + tokensOut * pricing.output) / 1_000_000;
-}
 
 const DEMO_DESCRIPTIONS = [
   {
@@ -876,6 +838,9 @@ export default function Home() {
           {generating && (
             <div className="bg-white rounded-xl border border-[#BFC7D1]/40 p-6">
               <GenerationProgress />
+              <div className="mt-4">
+                <TerminalProgress generating={generating} files={files} />
+              </div>
             </div>
           )}
         </div>
@@ -956,20 +921,6 @@ const PHASE_LABELS: Record<string, string> = {
   done:  'Finalizing',
 };
 
-function GenerationProgressBar() {
-  const [elapsed, setElapsed] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setElapsed(e => e + 1), 1000);
-    return () => clearInterval(id);
-  }, []);
-  const pct = Math.min((elapsed / 290) * 100, 95);
-  return (
-    <div
-      className="h-full bg-primary transition-all duration-1000 rounded-full"
-      style={{ width: `${pct}%` }}
-    />
-  );
-}
 
 function GenerationProgress() {
   const [elapsed, setElapsed] = useState(0);
@@ -1052,10 +1003,20 @@ interface ThemeFile { path: string; content: string; }
 
 function TerminalProgress({ generating, files }: { generating: boolean; files: ThemeFile[] }) {
   const [elapsed, setElapsed] = useState(0);
+  const elapsedRef = useRef(0);
 
   useEffect(() => {
-    if (!generating) { setElapsed(0); return; }
-    const id = setInterval(() => setElapsed(e => e + 1), 1000);
+    if (!generating) {
+      // Reset via ref first, then sync state on next tick to avoid
+      // calling setState synchronously inside the effect body
+      elapsedRef.current = 0;
+      const t = setTimeout(() => setElapsed(0), 0);
+      return () => clearTimeout(t);
+    }
+    const id = setInterval(() => {
+      elapsedRef.current += 1;
+      setElapsed(elapsedRef.current);
+    }, 1000);
     return () => clearInterval(id);
   }, [generating]);
 
@@ -1088,7 +1049,6 @@ function TerminalProgress({ generating, files }: { generating: boolean; files: T
           {PIPELINE_STEPS.map((step, i) => {
             const isActive  = elapsed >= step.startsAt && elapsed < step.endsAt;
             const isDone    = elapsed >= step.endsAt;
-            const isPending = elapsed < step.startsAt;
             return (
               <div key={i}>
                 <p>
@@ -1138,14 +1098,6 @@ function TerminalProgress({ generating, files }: { generating: boolean; files: T
   );
 }
 
-function getSystemPromptPreview(size: string): string {
-  const prompts: Record<string, string> = {
-    minimal: `[MINIMAL] WordPress Block Theme expert. Generate theme JSON.\n\nRULES: No core/html, no core/freeform. JSON only.\nOnly 2 templates (index, page), 1 pattern. Short content.`,
-    standard: `[STANDARD] WordPress Block Theme expert. Generate theme JSON.\n\nRULES: No core/html, no core/freeform. JSON only.\n4 templates (index, single, page, 404), 2 patterns.\nDesign: 6+ colors, 2 fonts, clamp() sizes, element styles.\nCover: 80vh, Unsplash URLs. Alternate section colors.`,
-    detailed: `[DETAILED] WordPress Block Theme expert. Generate premium theme.\n\nRULES: No core/html, no core/freeform. JSON only.\n6 templates + 3 patterns. Rich theme.json with spacingSizes.\nDesign: Cover 80vh, alternate colors, styled buttons.\nMake it look like a premium $79 theme.`,
-  };
-  return prompts[size] || prompts.standard;
-}
 
 const AUTOMATTIC_FACTS = [
   { title: 'WordPress powers 43% of the web', text: 'From personal blogs to enterprise sites like Time.com, TechCrunch, and the White House — all running on WordPress.' },
