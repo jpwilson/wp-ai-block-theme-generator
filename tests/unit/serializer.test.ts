@@ -26,9 +26,13 @@ describe('serializeBlock', () => {
       expect(serializeBlock(block)).toContain('/-->');
     });
 
-    it('serializes navigation as self-closing', () => {
+    it('serializes navigation as a container with open/close tags', () => {
+      // core/navigation holds nav links — it is not self-closing
       const block: BlockNode = { name: 'core/navigation' };
-      expect(serializeBlock(block)).toBe('<!-- wp:navigation /-->');
+      const result = serializeBlock(block);
+      expect(result).toContain('<!-- wp:navigation -->');
+      expect(result).toContain('<!-- /wp:navigation -->');
+      expect(result).not.toContain('<!-- wp:navigation /-->');
     });
 
     it('serializes post-title as self-closing', () => {
@@ -68,9 +72,10 @@ describe('serializeBlock', () => {
     });
 
     it('serializes paragraph with alignment', () => {
+      // WP uses textAlign (not align) for text-level centering on paragraphs
       const block: BlockNode = {
         name: 'core/paragraph',
-        attributes: { align: 'center' },
+        attributes: { textAlign: 'center' },
         innerContent: 'Centered text',
       };
       const result = serializeBlock(block);
@@ -277,8 +282,11 @@ describe('serializeBlocks', () => {
       { name: 'core/navigation' },
     ];
     const result = serializeBlocks(blocks);
+    // core/site-title is self-closing
     expect(result).toContain('<!-- wp:site-title /-->');
-    expect(result).toContain('<!-- wp:navigation /-->');
+    // core/navigation is a container (holds nav links) — open/close tags
+    expect(result).toContain('<!-- wp:navigation -->');
+    expect(result).toContain('<!-- /wp:navigation -->');
   });
 
   it('strips core/ prefix in output', () => {
