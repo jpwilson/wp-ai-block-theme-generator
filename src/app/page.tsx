@@ -13,6 +13,11 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import dynamic from 'next/dynamic';
 import {
+  Sparkles, Library, FileText, History,
+  PenLine, SlidersHorizontal, LayoutGrid, CheckCircle,
+  Rocket, MessageSquare,
+} from 'lucide-react';
+import {
   saveToLibrary, loadLibrary, deleteFromLibrary,
   storePreviewPayload, ThemeLibraryEntry,
 } from '@/lib/theme-library';
@@ -271,6 +276,8 @@ export default function Home() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [themeData, setThemeData] = useState<any>(null);
 
+  const [showKeyConfig, setShowKeyConfig] = useState(false);
+
   // Library state
   const [libraryEntries, setLibraryEntries] = useState<ThemeLibraryEntry[]>([]);
   const [currentEntryId, setCurrentEntryId] = useState<string | null>(null);
@@ -478,683 +485,543 @@ export default function Home() {
   const selectedFileContent = files.find(f => f.path === selectedFile)?.content || '';
 
   return (
-    <>
-    <header className="border-b" style={{ background: 'linear-gradient(135deg, oklch(0.18 0.04 260) 0%, oklch(0.28 0.08 255) 50%, oklch(0.22 0.06 270) 100%)' }}>
-      <div className="container mx-auto max-w-7xl px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-base shadow-lg" style={{ background: 'linear-gradient(135deg, oklch(0.52 0.14 250), oklch(0.42 0.18 280))', color: 'white' }}>W</div>
-          <div>
-            <h1 className="text-base font-semibold tracking-tight leading-none text-white">WP Block Theme Generator</h1>
-            <p className="text-xs mt-0.5" style={{ color: 'oklch(0.75 0.05 250)' }}>AI-powered · Native core blocks only · Zero Custom HTML</p>
+    <div className="flex min-h-screen bg-background">
+      {/* ─── Left Sidebar (desktop) ─── */}
+      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 flex-col bg-[#F2F3FF] border-r border-[#BFC7D1]/60 py-6 px-4 z-40">
+        <div className="mb-8 px-2">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white font-black text-lg tracking-tighter">W</div>
+            <div>
+              <h2 className="text-[15px] font-bold text-[#131B2E] tracking-tight leading-none">WP Theme Gen</h2>
+              <p className="text-[10px] font-semibold text-primary/70 uppercase tracking-widest mt-0.5">AI-Powered</p>
+            </div>
           </div>
         </div>
-        <nav className="flex items-center gap-5 text-sm">
-          <a href="/spec" style={{ color: 'oklch(0.75 0.05 250)' }} className="hover:text-white transition-colors">Spec</a>
-          <a href="/changelog" style={{ color: 'oklch(0.75 0.05 250)' }} className="hover:text-white transition-colors">Changelog</a>
-          <a href="https://github.com/jpwilson/wp-ai-block-theme-generator" target="_blank" rel="noopener" style={{ color: 'oklch(0.75 0.05 250)' }} className="hover:text-white transition-colors">GitHub</a>
+        <nav className="flex flex-col gap-1 flex-grow">
+          <div className="flex items-center gap-3 px-3 py-2.5 bg-white text-primary font-semibold rounded-lg shadow-sm">
+            <Sparkles className="w-4 h-4 shrink-0" />
+            <span className="text-sm">Generate</span>
+          </div>
+          <button
+            onClick={() => document.getElementById('library-section')?.scrollIntoView({ behavior: 'smooth' })}
+            className="flex items-center gap-3 px-3 py-2.5 text-[#131B2E]/70 hover:bg-[#DAE2FD]/60 hover:translate-x-0.5 transition-all rounded-lg text-left"
+          >
+            <Library className="w-4 h-4 shrink-0" />
+            <span className="text-sm flex-1">Theme Library</span>
+            {libraryEntries.length > 0 && (
+              <span className="text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{libraryEntries.length}</span>
+            )}
+          </button>
+          <a href="/spec" className="flex items-center gap-3 px-3 py-2.5 text-[#131B2E]/70 hover:bg-[#DAE2FD]/60 hover:translate-x-0.5 transition-all rounded-lg">
+            <FileText className="w-4 h-4 shrink-0" /><span className="text-sm">Spec</span>
+          </a>
+          <a href="/changelog" className="flex items-center gap-3 px-3 py-2.5 text-[#131B2E]/70 hover:bg-[#DAE2FD]/60 hover:translate-x-0.5 transition-all rounded-lg">
+            <History className="w-4 h-4 shrink-0" /><span className="text-sm">Changelog</span>
+          </a>
+          <a href="https://github.com/jpwilson/wp-ai-block-theme-generator" target="_blank" rel="noopener" className="flex items-center gap-3 px-3 py-2.5 text-[#131B2E]/70 hover:bg-[#DAE2FD]/60 hover:translate-x-0.5 transition-all rounded-lg">
+            <span className="text-xs font-bold">GH</span><span className="text-sm">GitHub</span>
+          </a>
         </nav>
-      </div>
-    </header>
-    <main className="flex-1 container mx-auto max-w-7xl px-4 py-6">
+        <div className="border-t border-[#131B2E]/10 pt-4 space-y-2">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#006295]/5 border border-[#006295]/15">
+            <CheckCircle className="w-3 h-3 text-[#006a48] shrink-0" />
+            <span className="text-[11px] font-medium text-[#404850]">Zero Custom HTML</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#006295]/5 border border-[#006295]/15">
+            <CheckCircle className="w-3 h-3 text-[#006a48] shrink-0" />
+            <span className="text-[11px] font-medium text-[#404850]">Native Core Blocks Only</span>
+          </div>
+        </div>
+      </aside>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left column: Input */}
-        <div className="space-y-6">
-          {/* Provider Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">AI Provider</CardTitle>
-              <CardDescription>Choose your AI provider and enter your API key</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="provider">Provider</Label>
-                  <Select value={provider} onValueChange={(v) => { setProvider(v as ProviderName); setModel(''); }}>
-                    <SelectTrigger id="provider">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(PROVIDER_LABELS).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="model">Model</Label>
-                  <Select
-                    value={model || DEFAULT_MODELS[provider]}
-                    onValueChange={(v) => setModel(v ?? '')}
-                  >
-                    <SelectTrigger id="model">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(() => {
-                        const models = PROVIDER_MODELS[provider];
-                        const groups = [...new Set(models.map(m => m.group).filter(Boolean))];
+      {/* ─── Main scrollable area ─── */}
+      <div className="flex-1 lg:ml-64 lg:mr-[360px] flex flex-col min-h-screen">
+        {/* Top header */}
+        <header className="sticky top-0 z-50 h-16 flex items-center justify-between px-6 border-b border-[#BFC7D1]/60 bg-[#FAF8FF]/90 backdrop-blur-md">
+          <div className="flex items-center gap-8">
+            <span className="text-lg font-black text-[#131B2E] tracking-tighter lg:hidden">WP Theme Gen</span>
+            <nav className="hidden md:flex items-center">
+              <span className="px-4 text-sm font-semibold text-primary border-b-2 border-primary h-16 flex items-center">Generate</span>
+              <a href="/spec" className="px-4 text-sm text-[#131B2E]/60 hover:text-primary transition-colors h-16 flex items-center">Spec</a>
+              <a href="/changelog" className="px-4 text-sm text-[#131B2E]/60 hover:text-primary transition-colors h-16 flex items-center">Changelog</a>
+            </nav>
+          </div>
+          <a href="https://github.com/jpwilson/wp-ai-block-theme-generator" target="_blank" rel="noopener"
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-[#404850] hover:text-primary hover:bg-primary/5 rounded-lg transition-colors">
+            &#123;null&#125;
+            <span className="hidden sm:inline">GitHub</span>
+          </a>
+        </header>
 
-                        if (groups.length > 0) {
-                          // Grouped display (OpenRouter)
-                          return groups.map(group => (
-                            <div key={group}>
-                              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                                {group}
-                              </div>
-                              {models
-                                .filter(m => m.group === group)
-                                .map(m => (
-                                  <SelectItem key={m.id} value={m.id}>
-                                    {m.label}
-                                  </SelectItem>
-                                ))}
-                            </div>
-                          ));
-                        }
+        {/* Form content */}
+        <main className="flex-1 max-w-3xl mx-auto w-full px-8 py-10 space-y-10 pb-28 lg:pb-10">
+          {/* Page hero */}
+          <div>
+            <h1 className="text-[2.5rem] font-black text-[#131B2E] tracking-tighter leading-none mb-2">Theme Generator</h1>
+            <p className="text-[#404850] max-w-xl leading-relaxed text-[15px]">
+              AI-powered WordPress themes. <strong>Native Core Blocks only</strong>. <strong>Zero Custom HTML</strong>. Install and edit in the WordPress Site Editor.
+            </p>
+          </div>
 
-                        // Flat display (direct providers)
-                        return models.map(m => (
-                          <SelectItem key={m.id} value={m.id}>
-                            {m.label}
-                          </SelectItem>
-                        ));
-                      })()}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+          {/* Model compact strip */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[#BFC7D1]/60 bg-[#F2F3FF]">
+            <span className="text-[10px] font-bold text-[#404850]/70 uppercase tracking-widest shrink-0 w-12">Model</span>
+            <Select value={provider} onValueChange={(v) => { setProvider(v as ProviderName); setModel(''); }}>
+              <SelectTrigger className="h-7 text-xs border-0 bg-white hover:bg-[#EAEdFF] w-[120px] shrink-0 rounded-md shadow-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(PROVIDER_LABELS).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="h-4 w-px bg-[#BFC7D1] shrink-0" />
+            <Select value={model || DEFAULT_MODELS[provider]} onValueChange={(v) => setModel(v ?? '')}>
+              <SelectTrigger className="h-7 text-xs border-0 bg-white hover:bg-[#EAEdFF] flex-1 min-w-0 rounded-md shadow-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(() => {
+                  const models = PROVIDER_MODELS[provider];
+                  const groups = [...new Set(models.map(m => m.group).filter(Boolean))];
+                  if (groups.length > 0) {
+                    return groups.map(group => (
+                      <div key={group}>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{group}</div>
+                        {models.filter(m => m.group === group).map(m => (
+                          <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
+                        ))}
+                      </div>
+                    ));
+                  }
+                  return models.map(m => <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>);
+                })()}
+              </SelectContent>
+            </Select>
+            <div className="h-4 w-px bg-[#BFC7D1] shrink-0" />
+            <button
+              onClick={() => setShowKeyConfig(p => !p)}
+              className="shrink-0 h-7 px-2.5 rounded-md text-[11px] text-[#404850] hover:text-[#131B2E] hover:bg-white transition-colors flex items-center gap-1.5 font-semibold"
+            >
+              <span className={`w-1.5 h-1.5 rounded-full inline-block ${useEnvKey || apiKey ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+              {showKeyConfig ? 'Hide key' : 'API key'}
+            </button>
+          </div>
 
+          {showKeyConfig && (
+            <div className="px-5 py-4 rounded-xl border border-[#BFC7D1]/60 bg-[#F2F3FF] space-y-4">
               {provider === 'custom' && (
                 <div>
-                  <Label htmlFor="baseUrl">Base URL</Label>
-                  <Input
-                    id="baseUrl"
-                    placeholder="https://api.example.com/v1"
-                    value={customBaseUrl}
-                    onChange={(e) => setCustomBaseUrl(e.target.value)}
-                  />
+                  <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#404850]/70 mb-1.5">Base URL</label>
+                  <Input id="baseUrl" placeholder="https://api.example.com/v1" value={customBaseUrl} onChange={(e) => setCustomBaseUrl(e.target.value)} className="h-10 bg-white border-[#BFC7D1]/60 text-sm" />
                 </div>
               )}
-
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={useEnvKey}
-                      onChange={(e) => setUseEnvKey(e.target.checked)}
-                      className="rounded"
-                    />
-                    Use server-configured key
+              <label className="flex items-center gap-2 text-sm cursor-pointer font-medium text-[#131B2E]">
+                <input type="checkbox" checked={useEnvKey} onChange={(e) => setUseEnvKey(e.target.checked)} className="rounded" />
+                Use server-configured key
+              </label>
+              {!useEnvKey && (
+                <div className="space-y-2">
+                  <Input id="apiKey" type="password" placeholder="sk-..." value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="h-10 bg-white border-[#BFC7D1]/60 text-sm" />
+                  <label className="flex items-center gap-2 text-xs text-[#404850] cursor-pointer">
+                    <input type="checkbox" checked={rememberKey} onChange={(e) => setRememberKey(e.target.checked)} className="rounded" />
+                    Remember in browser · never stored on server
                   </label>
                 </div>
-                {!useEnvKey && (
-                  <>
-                    <Label htmlFor="apiKey">API Key</Label>
-                    <Input
-                      id="apiKey"
-                      type="password"
-                      placeholder="sk-..."
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                    />
-                    <label className="flex items-center gap-2 text-sm text-muted-foreground mt-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={rememberKey}
-                        onChange={(e) => setRememberKey(e.target.checked)}
-                        className="rounded"
-                      />
-                      Remember key in browser (localStorage)
-                    </label>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Your key is sent per-request and never stored on the server.
-                    </p>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Theme Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Theme Description</CardTitle>
-              <CardDescription>Describe the theme you want to generate</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe the website you want..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                />
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {DEMO_DESCRIPTIONS.map((demo, i) => (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        setDescription(demo.text);
-                        setSiteType(demo.siteType || '');
-                        setIndustry(demo.industry || '');
-                        setStyle(demo.style || '');
-                        setColorMood(demo.colorMood || '');
-                        setHeaderStyle(demo.headerStyle || '');
-                        setPromptSize((demo.promptSize as 'minimal' | 'standard' | 'detailed') || 'detailed');
-                        // Set extra pages (mandatory pages always included automatically)
-                        setPages((demo.extraPages || []).join(', '));
-                      }}
-                      className="text-xs px-2.5 py-1 rounded-full border hover:bg-muted transition-colors text-muted-foreground"
-                    >
-                      {demo.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label>Site Type</Label>
-                  <Select value={siteType} onValueChange={(v) => setSiteType(v ?? '')}>
-                    <SelectTrigger><SelectValue placeholder="Select type..." /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="blog">Blog / Magazine</SelectItem>
-                      <SelectItem value="business">Business / Corporate</SelectItem>
-                      <SelectItem value="portfolio">Portfolio / Creative</SelectItem>
-                      <SelectItem value="ecommerce">eCommerce / Shop</SelectItem>
-                      <SelectItem value="restaurant">Restaurant / Food</SelectItem>
-                      <SelectItem value="agency">Agency / Studio</SelectItem>
-                      <SelectItem value="nonprofit">Nonprofit / Charity</SelectItem>
-                      <SelectItem value="personal">Personal / Resume</SelectItem>
-                      <SelectItem value="saas">SaaS / Tech Product</SelectItem>
-                      <SelectItem value="community">Community / Forum</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Industry</Label>
-                  <Select value={industry} onValueChange={(v) => setIndustry(v ?? '')}>
-                    <SelectTrigger><SelectValue placeholder="Select industry..." /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="technology">Technology</SelectItem>
-                      <SelectItem value="creative">Creative / Design</SelectItem>
-                      <SelectItem value="health">Health / Wellness</SelectItem>
-                      <SelectItem value="education">Education</SelectItem>
-                      <SelectItem value="finance">Finance / Legal</SelectItem>
-                      <SelectItem value="food">Food / Hospitality</SelectItem>
-                      <SelectItem value="fashion">Fashion / Beauty</SelectItem>
-                      <SelectItem value="real-estate">Real Estate</SelectItem>
-                      <SelectItem value="sports">Sports / Fitness</SelectItem>
-                      <SelectItem value="travel">Travel / Tourism</SelectItem>
-                      <SelectItem value="music">Music / Entertainment</SelectItem>
-                      <SelectItem value="photography">Photography</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <Label>Style</Label>
-                  <Select value={style} onValueChange={(v) => setStyle(v ?? '')}>
-                    <SelectTrigger><SelectValue placeholder="Select style..." /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="minimal">Minimal / Clean</SelectItem>
-                      <SelectItem value="bold">Bold / Striking</SelectItem>
-                      <SelectItem value="elegant">Elegant / Luxury</SelectItem>
-                      <SelectItem value="playful">Playful / Fun</SelectItem>
-                      <SelectItem value="corporate">Corporate / Professional</SelectItem>
-                      <SelectItem value="brutalist">Brutalist / Raw</SelectItem>
-                      <SelectItem value="editorial">Editorial / Magazine</SelectItem>
-                      <SelectItem value="warm">Warm / Friendly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Color Mood</Label>
-                  <Select value={colorMood} onValueChange={(v) => setColorMood(v ?? '')}>
-                    <SelectTrigger><SelectValue placeholder="Select mood..." /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dark">Dark / Moody</SelectItem>
-                      <SelectItem value="light">Light / Airy</SelectItem>
-                      <SelectItem value="warm">Warm (earth tones)</SelectItem>
-                      <SelectItem value="cool">Cool (blues, greens)</SelectItem>
-                      <SelectItem value="vibrant">Vibrant / Colorful</SelectItem>
-                      <SelectItem value="monochrome">Monochrome</SelectItem>
-                      <SelectItem value="pastel">Pastel / Soft</SelectItem>
-                      <SelectItem value="neon">Neon / Electric</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Header</Label>
-                  <Select value={headerStyle} onValueChange={(v) => setHeaderStyle(v ?? '')}>
-                    <SelectTrigger><SelectValue placeholder="Select header..." /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sticky">Sticky Navigation</SelectItem>
-                      <SelectItem value="transparent">Transparent over Hero</SelectItem>
-                      <SelectItem value="centered">Centered Logo</SelectItem>
-                      <SelectItem value="minimal">Minimal / Hamburger</SelectItem>
-                      <SelectItem value="classic">Classic Left Logo + Right Nav</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label>Prompt Size</Label>
-                <Select value={promptSize} onValueChange={(v) => setPromptSize((v ?? 'standard') as 'minimal' | 'standard' | 'detailed')}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="minimal">Minimal (fastest, ~30s)</SelectItem>
-                    <SelectItem value="standard">Standard (~60s)</SelectItem>
-                    <SelectItem value="detailed">Detailed (slowest, ~90s+)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <div className="flex items-baseline justify-between">
-                  <Label>Additional Pages</Label>
-                  <span className="text-xs text-muted-foreground">
-                    Home · About · Contact always included — add up to 6 more
-                  </span>
-                </div>
-                {/* Always-included pages */}
-                <div className="flex flex-wrap gap-2 mt-2 mb-1">
-                  {MANDATORY_PAGES.map((page) => (
-                    <span
-                      key={page}
-                      className="text-xs px-3 py-1.5 rounded-full border border-primary/40 bg-primary/8 text-primary font-medium cursor-default select-none"
-                    >
-                      {page} ✓
-                    </span>
-                  ))}
-                </div>
-                {/* Optional extras */}
-                <div className="flex flex-wrap gap-2 mt-1.5">
-                  {OPTIONAL_PAGES.map((page) => {
-                    const extras = pages.split(',').map(p => p.trim()).filter(Boolean);
-                    const selected = extras.includes(page);
-                    const atLimit = extras.length >= 6 && !selected;
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => {
-                          if (selected) {
-                            setPages(extras.filter(p => p !== page).join(', '));
-                          } else if (!atLimit) {
-                            setPages([...extras, page].join(', '));
-                          }
-                        }}
-                        disabled={atLimit}
-                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                          selected
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : atLimit
-                              ? 'opacity-40 cursor-not-allowed'
-                              : 'hover:bg-muted'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <Button
-                onClick={handleGenerate}
-                disabled={generating || !description.trim()}
-                className="w-full font-semibold tracking-wide shadow-sm"
-                size="lg"
-                style={generating || !description.trim() ? {} : { background: 'linear-gradient(135deg, oklch(0.52 0.14 250), oklch(0.42 0.18 280))' }}
-              >
-                {generating ? 'Generating & Refining...' : 'Generate Theme'}
-              </Button>
-              {!generating && description.trim() && (
-                <p className="text-center text-xs text-muted-foreground">
-                  Initial generation + 3 AI refinement passes
-                </p>
               )}
+            </div>
+          )}
 
-              {error && (
-                <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm whitespace-pre-wrap font-mono max-h-64 overflow-y-auto">
-                  {error}
+          {/* Section: Theme Description */}
+          <section className="bg-[#F2F3FF] rounded-xl p-7 border border-[#BFC7D1]/30">
+            <div className="flex items-center gap-3 mb-6">
+              <PenLine className="w-5 h-5 text-primary shrink-0" />
+              <h2 className="text-xl font-bold tracking-tight">Theme Description</h2>
+            </div>
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2 mb-1">
+                <span className="text-[10px] font-bold text-[#404850]/50 uppercase tracking-wider self-center mr-1">Presets:</span>
+                {DEMO_DESCRIPTIONS.map((demo, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setDescription(demo.text);
+                      setSiteType(demo.siteType || '');
+                      setIndustry(demo.industry || '');
+                      setStyle(demo.style || '');
+                      setColorMood(demo.colorMood || '');
+                      setHeaderStyle(demo.headerStyle || '');
+                      setPromptSize((demo.promptSize as 'minimal' | 'standard' | 'detailed') || 'detailed');
+                      setPages((demo.extraPages || []).join(', '));
+                    }}
+                    className="px-3 py-1.5 bg-[#DAE2FD]/60 text-[#57657B] rounded-lg text-xs font-semibold hover:bg-[#DAE2FD] hover:shadow-sm transition-all"
+                  >
+                    {demo.label}
+                  </button>
+                ))}
+              </div>
+              <Textarea
+                placeholder="A warm Italian restaurant in the heart of the city. Full-width hero with rich food photography, seasonal menu sections, chef&apos;s story, and reservation CTA..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={5}
+                className="bg-white border-[#BFC7D1]/60 text-[15px] placeholder:text-[#404850]/30 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 rounded-xl resize-none leading-relaxed"
+              />
+            </div>
+          </section>
+
+          {/* Section: Site Details */}
+          <section className="bg-[#F2F3FF] rounded-xl p-7 border border-[#BFC7D1]/30">
+            <div className="flex items-center gap-3 mb-6">
+              <SlidersHorizontal className="w-5 h-5 text-primary shrink-0" />
+              <h2 className="text-xl font-bold tracking-tight">Site Details</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+              {([
+                { label: 'Site Type', val: siteType, set: setSiteType, ph: 'Select type...', opts: [['blog','Blog / Magazine'],['business','Business / Corporate'],['portfolio','Portfolio / Creative'],['ecommerce','eCommerce / Shop'],['restaurant','Restaurant / Food'],['agency','Agency / Studio'],['nonprofit','Nonprofit / Charity'],['personal','Personal / Resume'],['saas','SaaS / Tech Product'],['community','Community / Forum']] },
+                { label: 'Industry', val: industry, set: setIndustry, ph: 'Select industry...', opts: [['technology','Technology'],['creative','Creative / Design'],['health','Health / Wellness'],['education','Education'],['finance','Finance / Legal'],['food','Food / Hospitality'],['fashion','Fashion / Beauty'],['real-estate','Real Estate'],['sports','Sports / Fitness'],['travel','Travel / Tourism'],['music','Music / Entertainment'],['photography','Photography'],['other','Other']] },
+                { label: 'Design Style', val: style, set: setStyle, ph: 'Select style...', opts: [['minimal','Minimal / Clean'],['bold','Bold / Striking'],['elegant','Elegant / Luxury'],['playful','Playful / Fun'],['corporate','Corporate / Professional'],['brutalist','Brutalist / Raw'],['editorial','Editorial / Magazine'],['warm','Warm / Friendly']] },
+                { label: 'Color Mood', val: colorMood, set: setColorMood, ph: 'Select mood...', opts: [['dark','Dark / Moody'],['light','Light / Airy'],['warm','Warm (earth tones)'],['cool','Cool (blues, greens)'],['vibrant','Vibrant / Colorful'],['monochrome','Monochrome'],['pastel','Pastel / Soft'],['neon','Neon / Electric']] },
+                { label: 'Header Style', val: headerStyle, set: setHeaderStyle, ph: 'Select header...', opts: [['sticky','Sticky Navigation'],['transparent','Transparent over Hero'],['centered','Centered Logo'],['minimal','Minimal / Hamburger'],['classic','Classic Left Logo + Right Nav']] },
+                { label: 'Prompt Detail', val: promptSize, set: setPromptSize as (v: string) => void, ph: '', opts: [['minimal','Minimal (fastest)'],['standard','Standard'],['detailed','Detailed (best quality)']] },
+              ] as const).map(({ label, val, set, ph, opts }) => (
+                <div key={label} className="space-y-2">
+                  <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#404850]/70">{label}</label>
+                  <Select value={val} onValueChange={(v) => set(v ?? '')}>
+                    <SelectTrigger className="h-11 bg-white border-[#BFC7D1]/60 text-sm rounded-lg">
+                      <SelectValue placeholder={ph} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {opts.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          </section>
 
-          {/* Iteration Chat */}
+          {/* Section: Additional Pages */}
+          <section className="bg-[#F2F3FF] rounded-xl p-7 border border-[#BFC7D1]/30">
+            <div className="flex items-center gap-3 mb-2">
+              <LayoutGrid className="w-5 h-5 text-primary shrink-0" />
+              <h2 className="text-xl font-bold tracking-tight">Additional Pages</h2>
+            </div>
+            <p className="text-xs text-[#404850]/60 mb-5 ml-8">Home · About · Contact always included — select up to 6 more</p>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {MANDATORY_PAGES.map(page => (
+                <span key={page} className="text-xs px-3 py-1.5 rounded-lg bg-primary/8 border border-primary/20 text-primary font-semibold cursor-default select-none">
+                  {page} ✓
+                </span>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {OPTIONAL_PAGES.map(page => {
+                const extras = pages.split(',').map(p => p.trim()).filter(Boolean);
+                const selected = extras.includes(page);
+                const atLimit = extras.length >= 6 && !selected;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => {
+                      if (selected) setPages(extras.filter(p => p !== page).join(', '));
+                      else if (!atLimit) setPages([...extras, page].join(', '));
+                    }}
+                    disabled={atLimit}
+                    className={`text-xs px-3 py-1.5 rounded-lg border font-semibold transition-all ${
+                      selected ? 'bg-primary text-white border-primary'
+                      : atLimit ? 'opacity-35 cursor-not-allowed bg-white border-[#BFC7D1]/60 text-[#404850]'
+                      : 'bg-white border-[#BFC7D1]/60 text-[#404850] hover:bg-primary hover:text-white hover:border-primary'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Refine chat (conditional) */}
           {themeData && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Refine Theme</CardTitle>
-                <CardDescription>Send follow-up instructions to modify the generated theme</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {chatMessages.length > 0 && (
-                  <ScrollArea className="h-48 border rounded-md p-3">
-                    <div className="space-y-3">
-                      {chatMessages.map((msg, i) => (
-                        <div key={i} className={`text-sm ${msg.role === 'user' ? 'text-right' : ''}`}>
-                          <Badge variant={msg.role === 'user' ? 'default' : 'secondary'} className="mb-1">
-                            {msg.role === 'user' ? 'You' : 'AI'}
-                          </Badge>
-                          <p className={`${msg.role === 'user' ? 'bg-primary/10' : 'bg-muted'} p-2 rounded-md inline-block max-w-[80%]`}>
-                            {msg.content}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                )}
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Make the header sticky, change colors to blue..."
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleIterate()}
-                    disabled={iterating}
-                  />
-                  <Button onClick={handleIterate} disabled={iterating || !chatInput.trim()}>
-                    {iterating ? '...' : 'Send'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Right column: Output */}
-        <div className="space-y-6">
-          {files.length > 0 && (
-            <>
-              {/* Download + Theme Info */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{themeName}</CardTitle>
-                      <CardDescription>{files.length} files generated</CardDescription>
-                    </div>
-                    <Button onClick={handleDownload} size="lg">
-                      Download ZIP
-                    </Button>
-                  </div>
-                </CardHeader>
-              </Card>
-
-              {/* File Preview */}
-              <Card className="flex-1">
-                <CardContent className="p-0">
-                  <Tabs defaultValue="files" className="w-full">
-                    <TabsList className="w-full justify-start rounded-none border-b">
-                      <TabsTrigger value="files">Files</TabsTrigger>
-                      <TabsTrigger value="preview">Preview</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="files" className="m-0">
-                      <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] md:divide-x min-h-[400px]">
-                        {/* File tree */}
-                        <ScrollArea className="h-[200px] md:h-[500px] border-b md:border-b-0">
-                          <div className="p-2 space-y-0.5">
-                            {files.map((file) => (
-                              <button
-                                key={file.path}
-                                onClick={() => setSelectedFile(file.path)}
-                                className={`w-full text-left text-xs px-2 py-1.5 rounded font-mono truncate ${
-                                  selectedFile === file.path
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'hover:bg-muted'
-                                }`}
-                              >
-                                {file.path}
-                              </button>
-                            ))}
-                          </div>
-                        </ScrollArea>
-
-                        {/* File content */}
-                        <ScrollArea className="h-[300px] md:h-[500px]">
-                          <pre className="p-4 text-xs font-mono whitespace-pre-wrap break-all">
-                            {selectedFileContent}
-                          </pre>
-                        </ScrollArea>
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="preview" className="m-0">
-                      <PlaygroundPreview
-                        zipBase64={zipBase64}
-                        themeSlug={themeSlug}
-                        onOpenNewTab={() => {
-                          if (zipBase64 && themeSlug) {
-                            storePreviewPayload({ zipBase64, slug: themeSlug });
-                            window.open('/preview', '_blank', 'noopener');
-                          }
-                        }}
-                      />
-                    </TabsContent>
-
-                    <TabsContent value="__removed_stats__" className="m-0 p-4">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold">AI Tool Call Log</h3>
-                        </div>
-                        {toolCalls.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">No tool calls yet.</p>
-                        ) : (
-                          <div className="space-y-3">
-                            {toolCalls.map((call, i) => (
-                              <div key={i} className="border rounded-md p-3 text-sm space-y-1">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant={call.success ? 'default' : 'destructive'}>
-                                      {call.success ? 'Success' : 'Failed'}
-                                    </Badge>
-                                    <span className="font-mono text-xs">{call.provider}</span>
-                                    <span className="text-muted-foreground">{call.model}</span>
-                                  </div>
-                                  <div className="flex items-center gap-3 text-muted-foreground">
-                                    <span>${estimateCost(call.model, call.tokensIn, call.tokensOut).toFixed(4)}</span>
-                                    <span>{(call.latencyMs / 1000).toFixed(1)}s</span>
-                                  </div>
-                                </div>
-                                <div className="flex gap-4 text-xs text-muted-foreground">
-                                  <span>Tokens in: {call.tokensIn.toLocaleString()}</span>
-                                  <span>Tokens out: {call.tokensOut.toLocaleString()}</span>
-                                  {call.retryCount > 0 && <span>Retry: #{call.retryCount}</span>}
-                                </div>
-                                {call.error && (
-                                  <p className="text-xs text-destructive mt-1">{call.error}</p>
-                                )}
-                              </div>
-                            ))}
-
-                            <Separator />
-
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-sm">
-                              <div>
-                                <p className="text-2xl font-bold">{toolCalls.length}</p>
-                                <p className="text-muted-foreground">Total Calls</p>
-                              </div>
-                              <div>
-                                <p className="text-2xl font-bold">
-                                  {toolCalls.reduce((s, c) => s + c.tokensIn + c.tokensOut, 0).toLocaleString()}
-                                </p>
-                                <p className="text-muted-foreground">Total Tokens</p>
-                              </div>
-                              <div>
-                                <p className="text-2xl font-bold">
-                                  {toolCalls.length > 0
-                                    ? (toolCalls.reduce((s, c) => s + c.latencyMs, 0) / toolCalls.length / 1000).toFixed(1)
-                                    : 0}s
-                                </p>
-                                <p className="text-muted-foreground">Avg Latency</p>
-                              </div>
-                              <div>
-                                <p className="text-2xl font-bold">
-                                  ${toolCalls.reduce((s, c) => s + estimateCost(c.model, c.tokensIn, c.tokensOut), 0).toFixed(2)}
-                                </p>
-                                <p className="text-muted-foreground">Est. Cost</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </TabsContent>
-
-                  </Tabs>
-                </CardContent>
-              </Card>
-            </>
-          )}
-
-          {!files.length && !generating && (
-            <Card className="border-dashed overflow-hidden">
-              <CardContent className="flex flex-col items-center justify-center py-16 text-center relative">
-                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-                <div className="relative z-10 space-y-6">
-                  <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, oklch(0.52 0.14 250), oklch(0.42 0.18 280))', color: 'white', fontSize: '1.75rem', fontWeight: 700 }}>W</div>
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2">Ready to generate</h3>
-                    <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
-                      Describe your site on the left, then click <strong>Generate Theme</strong>. The AI produces a complete WordPress block theme — templates, patterns, and theme.json — through a 3-pass refinement pipeline.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-6 justify-center text-xs text-muted-foreground">
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">1</span>
-                      <span>Generate</span>
-                    </div>
-                    <div className="h-px w-8 bg-border" />
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">2</span>
-                      <span>Refine ×3</span>
-                    </div>
-                    <div className="h-px w-8 bg-border" />
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">3</span>
-                      <span>Download</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {generating && (
-            <Card className="overflow-hidden">
-              <div className="h-1 w-full bg-muted">
-                <GenerationProgressBar />
+            <section className="bg-[#F2F3FF] rounded-xl p-7 border border-[#BFC7D1]/30">
+              <div className="flex items-center gap-3 mb-5">
+                <MessageSquare className="w-5 h-5 text-primary shrink-0" />
+                <h2 className="text-xl font-bold tracking-tight">Refine Theme</h2>
               </div>
-              <CardContent className="flex flex-col items-center justify-center py-14">
-                <GenerationProgress />
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-      {/* AI Stats + Prompt — always visible, not gated on theme generation */}
-      <Card className="mt-6">
-        <CardContent className="p-0">
-          <Tabs defaultValue="prompt" className="w-full">
-            <TabsList className="w-full justify-start rounded-none border-b">
-              <TabsTrigger value="prompt">System Prompt</TabsTrigger>
-              <TabsTrigger value="stats">AI Stats</TabsTrigger>
-            </TabsList>
-            <TabsContent value="prompt" className="m-0 p-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-sm">System Prompt</h3>
-                    <p className="text-xs text-muted-foreground">What gets sent to the AI — updates live as you change Prompt Size</p>
+              {chatMessages.length > 0 && (
+                <ScrollArea className="h-40 mb-4 border border-[#BFC7D1]/40 rounded-xl bg-white p-3">
+                  <div className="space-y-3">
+                    {chatMessages.map((msg, i) => (
+                      <div key={i} className={`text-sm ${msg.role === 'user' ? 'text-right' : ''}`}>
+                        <Badge variant={msg.role === 'user' ? 'default' : 'secondary'} className="mb-1">{msg.role === 'user' ? 'You' : 'AI'}</Badge>
+                        <p className={`${msg.role === 'user' ? 'bg-primary/10' : 'bg-[#F2F3FF]'} p-2 rounded-lg inline-block max-w-[80%] text-left`}>{msg.content}</p>
+                      </div>
+                    ))}
                   </div>
-                  <Badge variant="secondary">{promptSize}</Badge>
+                </ScrollArea>
+              )}
+              <div className="flex gap-2">
+                <Input placeholder="Make the header sticky, change accent to emerald..." value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleIterate()} disabled={iterating} className="bg-white border-[#BFC7D1]/60 h-10" />
+                <Button onClick={handleIterate} disabled={iterating || !chatInput.trim()} className="h-10 px-5 bg-primary hover:bg-primary/90">
+                  {iterating ? '...' : 'Send'}
+                </Button>
+              </div>
+            </section>
+          )}
+
+          {/* AI Stats + Prompt */}
+          <section className="bg-[#F2F3FF] rounded-xl border border-[#BFC7D1]/30 overflow-hidden">
+            <Tabs defaultValue="prompt" className="w-full">
+              <TabsList className="w-full justify-start rounded-none border-b border-[#BFC7D1]/40 bg-transparent px-6 gap-4 h-12">
+                <TabsTrigger value="prompt" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary text-[10px] font-bold uppercase tracking-widest px-0 h-12 bg-transparent">System Prompt</TabsTrigger>
+                <TabsTrigger value="stats" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary text-[10px] font-bold uppercase tracking-widest px-0 h-12 bg-transparent">AI Stats</TabsTrigger>
+              </TabsList>
+              <TabsContent value="prompt" className="m-0 p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#404850]/60">Active prompt · updates live</p>
+                  <Badge variant="secondary" className="text-[10px]">{promptSize}</Badge>
                 </div>
-                <ScrollArea className="h-[300px]">
-                  <pre className="text-xs font-mono whitespace-pre-wrap bg-muted p-3 rounded-md leading-relaxed">
+                <ScrollArea className="h-[220px]">
+                  <pre className="text-xs font-mono whitespace-pre-wrap bg-white p-4 rounded-xl border border-[#BFC7D1]/40 leading-relaxed text-[#131B2E]">
                     {getSystemPromptPreview(promptSize)}
                   </pre>
                 </ScrollArea>
-              </div>
-            </TabsContent>
-            <TabsContent value="stats" className="m-0 p-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-sm">AI Tool Call Log</h3>
-                    <p className="text-xs text-muted-foreground">1 generation + 3 refinement passes per theme</p>
-                  </div>
-                  {toolCalls.length > 0 && (
-                    <div className="flex gap-2">
-                      <Badge variant="outline" className="text-[10px]">{toolCalls.length} calls</Badge>
-                      <Badge variant="outline" className="text-[10px]">${toolCalls.reduce((s, c) => s + estimateCost(c.model, c.tokensIn, c.tokensOut), 0).toFixed(3)}</Badge>
-                    </div>
-                  )}
-                </div>
+              </TabsContent>
+              <TabsContent value="stats" className="m-0 p-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#404850]/60 mb-4">1 generation + 3 refinement passes per theme</p>
                 {toolCalls.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Generate a theme to see AI call details here.</p>
+                  <p className="text-sm text-[#404850]/50 italic">Generate a theme to see AI call details.</p>
                 ) : (
                   <div className="space-y-2">
                     {toolCalls.map((call, i) => (
-                      <div key={i} className="border rounded-md p-3 text-sm space-y-1">
+                      <div key={i} className="border border-[#BFC7D1]/40 rounded-lg p-3 text-sm bg-white">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Badge variant={call.success ? 'default' : 'destructive'} className="text-[10px]">
-                              {call.success ? 'OK' : 'Failed'}
-                            </Badge>
-                            <span className="font-mono text-xs">{call.provider}</span>
-                            <span className="text-muted-foreground text-xs">{call.model}</span>
+                            <Badge variant={call.success ? 'default' : 'destructive'} className="text-[10px]">{call.success ? 'OK' : 'Failed'}</Badge>
+                            <span className="font-mono text-xs text-[#404850] truncate max-w-[160px]">{call.model}</span>
                           </div>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <div className="flex gap-3 text-xs text-[#404850]/60">
                             <span>${estimateCost(call.model, call.tokensIn, call.tokensOut).toFixed(4)}</span>
                             <span>{(call.latencyMs / 1000).toFixed(1)}s</span>
                           </div>
-                        </div>
-                        <div className="flex gap-4 text-xs text-muted-foreground">
-                          <span>In: {call.tokensIn.toLocaleString()}</span>
-                          <span>Out: {call.tokensOut.toLocaleString()}</span>
-                          {call.retryCount > 0 && <span>Retry #{call.retryCount}</span>}
                         </div>
                         {call.error && <p className="text-xs text-destructive mt-1">{call.error}</p>}
                       </div>
                     ))}
                     <Separator />
-                    <div className="grid grid-cols-4 gap-4 text-center text-sm pt-1">
-                      <div><p className="text-xl font-bold">{toolCalls.length}</p><p className="text-muted-foreground text-xs">Total Calls</p></div>
-                      <div><p className="text-xl font-bold">{toolCalls.reduce((s, c) => s + c.tokensIn + c.tokensOut, 0).toLocaleString()}</p><p className="text-muted-foreground text-xs">Total Tokens</p></div>
-                      <div><p className="text-xl font-bold">{toolCalls.length > 0 ? (toolCalls.reduce((s, c) => s + c.latencyMs, 0) / toolCalls.length / 1000).toFixed(1) : 0}s</p><p className="text-muted-foreground text-xs">Avg Latency</p></div>
-                      <div><p className="text-xl font-bold">${toolCalls.reduce((s, c) => s + estimateCost(c.model, c.tokensIn, c.tokensOut), 0).toFixed(3)}</p><p className="text-muted-foreground text-xs">Est. Cost</p></div>
+                    <div className="grid grid-cols-4 gap-3 text-center pt-2">
+                      {[
+                        [toolCalls.length, 'Calls'],
+                        [(toolCalls.reduce((s,c)=>s+c.tokensIn+c.tokensOut,0)/1000).toFixed(1)+'k', 'Tokens'],
+                        [toolCalls.length > 0 ? (toolCalls.reduce((s,c)=>s+c.latencyMs,0)/toolCalls.length/1000).toFixed(1)+'s' : '0s', 'Avg'],
+                        ['$'+toolCalls.reduce((s,c)=>s+estimateCost(c.model,c.tokensIn,c.tokensOut),0).toFixed(3), 'Cost'],
+                      ].map(([val, lbl]) => (
+                        <div key={String(lbl)}>
+                          <p className="text-lg font-bold text-[#131B2E]">{val}</p>
+                          <p className="text-[9px] font-bold uppercase tracking-wider text-[#404850]/60">{lbl}</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+              </TabsContent>
+            </Tabs>
+          </section>
 
-      {/* Theme Library */}
-      <ThemeLibrary
-        entries={libraryEntries}
-        onDelete={(id) => setLibraryEntries(deleteFromLibrary(id))}
-        onPreview={(entry) => {
-          storePreviewPayload({ zipBase64: entry.zipBase64, slug: entry.slug });
-          window.open('/preview', '_blank', 'noopener');
-        }}
-      />
-    </main>
-    </>
+          {/* Theme Library */}
+          <div id="library-section">
+            <ThemeLibrary
+              entries={libraryEntries}
+              onDelete={(id) => setLibraryEntries(deleteFromLibrary(id))}
+              onPreview={(entry) => {
+                storePreviewPayload({ zipBase64: entry.zipBase64, slug: entry.slug });
+                window.open('/preview', '_blank', 'noopener');
+              }}
+            />
+          </div>
+        </main>
+      </div>
+
+      {/* ─── Right Panel (desktop) ─── */}
+      <aside className="hidden lg:flex fixed right-0 top-0 w-[360px] h-screen flex-col bg-[#F2F3FF] border-l border-[#BFC7D1]/60 z-40">
+        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#404850]/60">Technical Summary</p>
+
+          {/* Terminal block */}
+          <div className="rounded-xl bg-[#131B2E] p-5 font-mono text-[0.68rem] leading-relaxed shadow-xl">
+            <div className="flex justify-between border-b border-white/10 pb-2 mb-3">
+              <span className="text-white/40">ENGINE_MODE</span>
+              <span className="text-emerald-400 font-bold">CORE_BLOCKS_ONLY</span>
+            </div>
+            <div className="space-y-1.5">
+              <p><span className="text-white/30">01 </span><span className="text-[#92ccff]">SCANNING WP_CORE_SCHEMA...</span></p>
+              <p><span className="text-white/30">02 </span><span className="text-[#92ccff]">VALIDATING BLOCK_JSON v3...</span></p>
+              <p><span className="text-white/30">03 </span><span className="text-[#92ccff]">BYPASSING CUSTOM_HTML...</span></p>
+              <p><span className="text-white/30">04 </span>
+                <span className={generating ? 'text-amber-400 animate-pulse' : files.length ? 'text-emerald-400' : 'text-white/40'}>
+                  {generating ? 'GENERATING...' : files.length ? `COMPLETE — ${files.length} FILES` : 'READY_FOR_GENERATION'}
+                </span>
+              </p>
+            </div>
+            {files.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-white/10 space-y-1 text-white/50">
+                <p className="text-white/30">{'// Output:'}</p>
+                <p>— theme.json v3 · settings · styles</p>
+                <p>— {files.filter(f => f.path.startsWith('templates')).length} templates · {files.filter(f => f.path.startsWith('parts')).length} parts · {files.filter(f => f.path.startsWith('patterns')).length} patterns</p>
+              </div>
+            )}
+          </div>
+
+          {/* Status card */}
+          <div className="bg-white rounded-xl p-5 border border-[#BFC7D1]/40 space-y-3">
+            <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center justify-between">
+              Generator Status
+              <span className={`w-2 h-2 rounded-full ${generating ? 'bg-amber-400 animate-pulse' : files.length ? 'bg-emerald-400' : 'bg-[#BFC7D1]'}`} />
+            </h4>
+            {[
+              { label: 'Block schema validation active', done: true },
+              { label: 'Zero Custom HTML filter active', done: true },
+              { label: files.length > 0 ? `${files.length} files generated successfully` : generating ? 'Generation in progress...' : 'Awaiting generation command', done: !!files.length, active: generating },
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <CheckCircle className={`w-4 h-4 shrink-0 mt-0.5 ${item.done ? 'text-[#006a48]' : item.active ? 'text-amber-500' : 'text-[#BFC7D1]'}`} />
+                <p className={`text-xs font-medium leading-tight ${item.done || item.active ? 'text-[#404850]' : 'text-[#404850]/40'}`}>{item.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
+              {error}
+            </div>
+          )}
+
+          {/* Output */}
+          {files.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-[#131B2E]">{themeName}</p>
+                  <p className="text-xs text-[#404850]/60">{files.length} files generated</p>
+                </div>
+                <Button onClick={handleDownload} size="sm" className="bg-primary text-white hover:bg-primary/90 text-xs">
+                  Download ZIP
+                </Button>
+              </div>
+              <div className="bg-white rounded-xl border border-[#BFC7D1]/40 overflow-hidden">
+                <Tabs defaultValue="preview" className="w-full">
+                  <TabsList className="w-full justify-start rounded-none border-b border-[#BFC7D1]/40 bg-transparent px-4 gap-4 h-10">
+                    <TabsTrigger value="preview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary text-[10px] font-bold uppercase tracking-wider px-0 h-10 bg-transparent">Preview</TabsTrigger>
+                    <TabsTrigger value="files" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary text-[10px] font-bold uppercase tracking-wider px-0 h-10 bg-transparent">Files</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="preview" className="m-0">
+                    <PlaygroundPreview
+                      zipBase64={zipBase64}
+                      themeSlug={themeSlug}
+                      onOpenNewTab={() => {
+                        if (zipBase64 && themeSlug) {
+                          storePreviewPayload({ zipBase64, slug: themeSlug });
+                          window.open('/preview', '_blank', 'noopener');
+                        }
+                      }}
+                    />
+                  </TabsContent>
+                  <TabsContent value="files" className="m-0">
+                    <div className="grid grid-cols-[150px_1fr] divide-x min-h-[380px] max-h-[500px]">
+                      <ScrollArea className="h-[380px]">
+                        <div className="p-2 space-y-0.5">
+                          {files.map(file => (
+                            <button key={file.path} onClick={() => setSelectedFile(file.path)}
+                              className={`w-full text-left text-[10px] px-2 py-1.5 rounded font-mono truncate transition-colors ${selectedFile === file.path ? 'bg-primary text-white' : 'hover:bg-[#EAEdFF] text-[#404850]'}`}>
+                              {file.path}
+                            </button>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                      <ScrollArea className="h-[380px]">
+                        <pre className="p-3 text-[10px] font-mono whitespace-pre-wrap break-all text-[#131B2E] leading-relaxed">
+                          {selectedFileContent}
+                        </pre>
+                      </ScrollArea>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+          )}
+
+          {!files.length && !generating && (
+            <div className="bg-white rounded-xl border border-dashed border-[#BFC7D1] p-8 text-center">
+              <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center mx-auto mb-4">
+                <LayoutGrid className="w-6 h-6 text-primary" />
+              </div>
+              <p className="text-sm font-bold text-[#131B2E] mb-1">No theme generated yet</p>
+              <p className="text-xs text-[#404850]/60 leading-relaxed max-w-[240px] mx-auto">
+                Describe your site, fill in the details, then click Generate below.
+              </p>
+            </div>
+          )}
+
+          {generating && (
+            <div className="bg-white rounded-xl border border-[#BFC7D1]/40 p-6">
+              <GenerationProgress />
+            </div>
+          )}
+        </div>
+
+        {/* Generate — sticky bottom */}
+        <div className="p-6 border-t border-[#BFC7D1]/40 shrink-0">
+          <button
+            onClick={handleGenerate}
+            disabled={generating || !description.trim()}
+            className="w-full py-4 rounded-xl font-bold text-[15px] text-white flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
+            style={generating || !description.trim() ? { background: '#BFC7D1' } : { background: 'linear-gradient(135deg, #006295, #007cba)' }}
+          >
+            <Rocket className="w-5 h-5" />
+            {generating ? 'Generating & Refining...' : 'Generate Theme'}
+          </button>
+          {!generating && description.trim() && (
+            <p className="text-center text-[9px] font-bold uppercase tracking-wider text-[#404850]/50 mt-3">
+              1 generation · 3 refinement passes · Claude Opus 4.6
+            </p>
+          )}
+        </div>
+      </aside>
+
+      {/* ─── Mobile: FAB generate ─── */}
+      <div className="fixed bottom-20 right-4 lg:hidden z-50">
+        <button
+          onClick={handleGenerate}
+          disabled={generating || !description.trim()}
+          className="bg-primary text-white px-6 py-3.5 rounded-xl font-bold shadow-xl shadow-primary/30 flex items-center gap-2 disabled:opacity-50 active:scale-95 transition-all"
+        >
+          <Rocket className="w-4 h-4" />
+          {generating ? 'Generating...' : 'Generate'}
+        </button>
+      </div>
+
+      {/* ─── Mobile Bottom Nav ─── */}
+      <nav className="fixed bottom-0 w-full z-50 bg-[#FAF8FF] border-t border-[#BFC7D1]/60 lg:hidden">
+        <div className="flex justify-around items-center h-16 px-4">
+          <a href="#" className="flex flex-col items-center gap-1 text-primary">
+            <Sparkles className="w-5 h-5" /><span className="text-[9px] font-bold uppercase tracking-widest">Build</span>
+          </a>
+          <button onClick={() => document.getElementById('library-section')?.scrollIntoView({ behavior: 'smooth' })} className="flex flex-col items-center gap-1 text-[#404850]/60">
+            <Library className="w-5 h-5" /><span className="text-[9px] font-bold uppercase tracking-widest">Library</span>
+          </button>
+          <a href="/spec" className="flex flex-col items-center gap-1 text-[#404850]/60">
+            <FileText className="w-5 h-5" /><span className="text-[9px] font-bold uppercase tracking-widest">Spec</span>
+          </a>
+          <a href="/changelog" className="flex flex-col items-center gap-1 text-[#404850]/60">
+            <History className="w-5 h-5" /><span className="text-[9px] font-bold uppercase tracking-widest">History</span>
+          </a>
+        </div>
+      </nav>
+    </div>
   );
 }
+
 
 const GENERATION_STEPS = [
   { at: 0,   label: 'Sending prompt to Claude Opus...', detail: 'Building detailed system prompt with section anatomy and design rules', phase: 'init' },
