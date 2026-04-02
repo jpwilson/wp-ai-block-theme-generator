@@ -415,13 +415,20 @@ ABSOLUTE RULES:
 4. Every core/heading MUST have non-empty "content". Every core/paragraph MUST have non-empty "content".`;
 
 /**
- * Run 3 sequential AI refinement passes over a validated AIResponse.
- * Each pass uses a fast model and focuses on a specific quality dimension.
- * If a pass produces invalid JSON or fails validation the previous version is kept.
+ * Run AI refinement passes over a validated AIResponse.
+ *
+ * maxPasses controls how many of the 3 passes to run:
+ *   3 = full quality (needs Vercel Pro / local dev — ~180s extra)
+ *   1 = content-only pass (fits Vercel Hobby — ~20s extra)
+ *   0 = skip refinement entirely
+ *
+ * Each pass uses the same model as initial generation.
+ * If a pass produces invalid JSON or fails validation, the previous version is kept.
  */
 export async function refineThemeWithPasses(
   config: ProviderConfig,
   data: AIResponse,
+  maxPasses = 3,
 ): Promise<{ data: AIResponse; toolCalls: ToolCall[] }> {
   const toolCalls: ToolCall[] = [];
   let current = data;
@@ -429,7 +436,7 @@ export async function refineThemeWithPasses(
   // Use the same model the user chose — refinement quality matters as much as initial generation
   const refineConfig: ProviderConfig = { ...config };
 
-  for (const pass of REFINEMENT_PASSES) {
+  for (const pass of REFINEMENT_PASSES.slice(0, maxPasses)) {
     const currentJson = JSON.stringify(current, null, 2);
     const userPrompt = `Here is the current WordPress block theme JSON:\n\n${currentJson}\n\nIMPROVEMENT FOCUS — ${pass.name.toUpperCase()} PASS:\n${pass.focus}\n\nReturn ONLY the complete improved JSON object with ALL fields intact.`;
 

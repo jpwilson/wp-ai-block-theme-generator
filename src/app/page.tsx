@@ -128,10 +128,10 @@ const PROVIDER_MODELS: Record<ProviderName, ModelOption[]> = {
 };
 
 const DEFAULT_MODELS: Record<ProviderName, string> = {
-  openrouter: 'anthropic/claude-opus-4.6',
-  anthropic: 'claude-opus-4-20250514',
+  openrouter: 'anthropic/claude-sonnet-4.6',  // Sonnet fits Vercel Hobby 60s limit; switch to Opus on Pro
+  anthropic: 'claude-sonnet-4-20250514',
   openai: 'gpt-4.1',
-  grok: 'grok-4',
+  grok: 'grok-3',
   custom: 'gpt-4o',
 };
 

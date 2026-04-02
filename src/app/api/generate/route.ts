@@ -4,9 +4,10 @@ import { assembleTheme } from '@/lib/assembler';
 import { packageThemeBuffer } from '@/lib/packager';
 import { ProviderConfig } from '@/lib/ai/providers';
 
-// Allow up to 300 seconds: initial generation (~90s) + 3 Opus refinement passes (~60s each)
-// Vercel Pro supports up to 300s. For local dev there is no timeout.
-export const maxDuration = 300;
+// 58s budget: fits Vercel Hobby (60s limit).
+// With Sonnet 4.6: ~25s initial + 1 refinement pass ~20s = ~45s total.
+// For full Opus quality with 3 passes, upgrade to Vercel Pro (300s limit).
+export const maxDuration = 58;
 
 export async function POST(request: Request) {
   try {
@@ -65,8 +66,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Run 3 AI refinement passes: structure → design → polish
-    const { data: refined, toolCalls: refineCalls } = await refineThemeWithPasses(config, result.validation.data);
+    // On Vercel Hobby (60s limit) we run 1 content-fix pass with Sonnet.
+    // Upgrade to Vercel Pro to unlock 3 passes with Opus.
+    const isPro = process.env.VERCEL_ENV === 'production' && process.env.VERCEL_PLAN === 'pro';
+    const refinePasses = isPro ? 3 : 1;
+    const { data: refined, toolCalls: refineCalls } = await refineThemeWithPasses(config, result.validation.data, refinePasses);
     const allToolCalls = [...result.toolCalls, ...refineCalls];
 
     // Enhance: apply deterministic design best practices
