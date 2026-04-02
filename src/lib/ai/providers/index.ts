@@ -81,7 +81,7 @@ async function callOpenAICompatible(
 
   // OpenRouter requires additional headers
   if (provider === 'openrouter') {
-    headers['HTTP-Referer'] = 'https://wp-block-theme-generator.vercel.app';
+    headers['HTTP-Referer'] = 'https://wp-block-theme-generator-production.up.railway.app';
     headers['X-Title'] = 'WP Block Theme Generator';
   }
 

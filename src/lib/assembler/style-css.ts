@@ -13,7 +13,7 @@ export function generateStyleCss(
 Theme Name: ${safeName}
 Theme URI: https://github.com/your-repo/${slug}
 Author: AI Theme Generator
-Author URI: https://wp-block-theme-generator.vercel.app
+Author URI: https://wp-block-theme-generator-production.up.railway.app
 Description: ${safeDescription}
 Version: 1.0.0
 License: GNU General Public License v2 or later
