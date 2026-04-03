@@ -960,7 +960,7 @@ function GenerationProgress() {
               <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${done && !active ? 'bg-primary text-primary-foreground' : active ? 'bg-primary/20 text-primary border border-primary' : 'bg-muted text-muted-foreground'}`}>
                 {i + 1}
               </span>
-              <span className={active ? 'text-foreground font-medium' : done && !active ? 'text-muted-foreground line-through' : ''}>
+              <span className={active ? 'text-foreground font-medium' : done && !active ? 'text-muted-foreground' : ''}>
                 {['Content', 'Design', 'Polish'][i]}
               </span>
             </div>

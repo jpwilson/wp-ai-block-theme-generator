@@ -1,5 +1,7 @@
 # AI-Powered WordPress Block Theme Generator
 
+> **Live demo → [wp-block-theme-generator-production.up.railway.app](https://wp-block-theme-generator-production.up.railway.app)**
+
 A standalone web application that generates complete, valid, installable WordPress Block Themes from natural language descriptions. Built with Next.js, Claude AI, and a deterministic block markup serialization pipeline.
 
 **The generated themes use only native WordPress core blocks — zero Custom HTML blocks.**
