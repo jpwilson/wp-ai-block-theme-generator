@@ -1,6 +1,8 @@
 # AI-Powered WordPress Block Theme Generator
 
-> **Live demo → [wp-block-theme-generator-production.up.railway.app](https://wp-block-theme-generator-production.up.railway.app)**
+> **Live demo → [wp-theme.46-225-235-124.sslip.io](https://wp-theme.46-225-235-124.sslip.io)**
+>
+> _Hosted on [Hetzner Cloud](https://www.hetzner.com/cloud) (ARM CAX21, Nuremberg) via [Coolify](https://coolify.io) — migrated off Railway to cut demo hosting costs._
 
 A standalone web application that generates complete, valid, installable WordPress Block Themes from natural language descriptions. Built with Next.js, Claude AI, and a deterministic block markup serialization pipeline.
 
@@ -25,13 +27,13 @@ npm run dev
 
 Open [http://localhost:3333](http://localhost:3333), select your AI provider, enter your API key, and start generating themes.
 
-> **This is primarily a local-first tool.** AI generation runs 4 Claude Opus calls in sequence (~2–5 minutes total). There is no timeout locally. The Railway deployment at the URL below pre-configures an OpenRouter key so others can try it without an API key.
+> **This is primarily a local-first tool.** AI generation runs 4 Claude Opus calls in sequence (~2–5 minutes total). There is no timeout locally. The hosted deployment at the URL below pre-configures an OpenRouter key so others can try it without an API key.
 
 ### Deployed Demo
 
-**[https://wp-block-theme-generator-production.up.railway.app](https://wp-block-theme-generator-production.up.railway.app)**
+**[https://wp-theme.46-225-235-124.sslip.io](https://wp-theme.46-225-235-124.sslip.io)**
 
-Hosted on Railway (persistent Node.js server — no serverless timeout limits). The server-configured OpenRouter key is pre-loaded so "Use server-configured key" works out of the box.
+Hosted on Hetzner Cloud (ARM CAX21, Nuremberg) via Coolify — persistent Node.js server, no serverless timeout limits. The server-configured OpenRouter key is pre-loaded so "Use server-configured key" works out of the box. Previously deployed on Railway.
 
 ### Run Tests
 
